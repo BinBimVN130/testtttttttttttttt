@@ -7,28 +7,30 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-    html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#fff}
-    #app{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;background:#000;transition:background-color .3s ease}
+    html,body{width:100%;height:100%;overflow:hidden;background:#222226;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#fff}
+    #app{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;background:#222226;transition:background-color .3s ease}
 
     #fps{
-      position:fixed;top:10px;left:12px;z-index:40;
-      font-size:11px;font-weight:400;color:rgba(255,255,255,.6);
+      position:fixed;top:12px;left:14px;z-index:40;
+      font-size:11px;font-weight:400;color:rgba(255,255,255,.65);
       letter-spacing:.2px;pointer-events:none;
       font-family:monospace;
+      background:rgba(0,0,0,0.25);padding:4px 8px;border-radius:6px;backdrop-filter:blur(4px);
     }
     #fps .ver{opacity:.7;font-weight:400}
 
+    /* Khung Stage không còn màu nền đen thừa */
     #stage{
       position:relative;
-      width:min(calc(100vw - 160px), calc(88vh * 16 / 9));
-      height:min(calc((100vw - 160px) * 9 / 16), 88vh);
-      background:#000;border-radius:12px;overflow:hidden;
+      width:calc(100vw - 140px);
+      height:100vh;
+      background:transparent;
       display:flex;align-items:center;justify-content:center;
-      transition:background-color .3s;
+      overflow:hidden;
     }
     #camera-frame{
-      position:relative;background:#111;overflow:hidden;border-radius:10px;
-      width:100%;height:100%;
+      position:relative;background:transparent;overflow:hidden;border-radius:14px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.4);
       transition:width .25s ease,height .25s ease,opacity .22s ease,transform .25s ease;
     }
     #camera-frame.mode-switching{
@@ -37,7 +39,7 @@
     }
     #video-wrap{width:100%;height:100%;overflow:hidden;position:relative;cursor:default;touch-action:none}
     #video{
-      width:100%;height:100%;object-fit:cover;display:block;background:#000;
+      width:100%;height:100%;object-fit:cover;display:block;background:#1a1a1e;
       transform-origin:center center;will-change:transform, filter;
       transform: translateZ(0);
       pointer-events:none;
@@ -46,7 +48,7 @@
 
     #no-camera{
       position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-      background:#222;z-index:10;
+      background:#2a2a2e;z-index:10;
     }
     #no-camera.hidden{display:none}
     #no-camera svg{width:72px;height:72px;opacity:.7}
@@ -58,37 +60,43 @@
     #countdown.show{display:flex}
 
     #rec-timer{
-      position:absolute;top:12px;left:50%;transform:translateX(-50%);
-      font-size:16px;font-weight:500;color:#fff;background:rgba(0,0,0,.55);
-      padding:5px 14px;border-radius:20px;z-index:20;display:none;font-variant-numeric:tabular-nums;
+      position:absolute;top:14px;left:50%;transform:translateX(-50%);
+      font-size:15px;font-weight:600;color:#fff;background:rgba(0,0,0,.55);
+      padding:6px 16px;border-radius:20px;z-index:20;display:none;font-variant-numeric:tabular-nums;
+      backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.15);
     }
     #rec-timer.recording{color:#ff3b30}
 
     #qr-hint{
-      position:absolute;top:12px;left:50%;transform:translateX(-50%);
-      background:rgba(0,0,0,.65);color:#fff;padding:8px 18px;border-radius:20px;
+      position:absolute;top:14px;left:50%;transform:translateX(-50%);
+      background:rgba(0,0,0,.6);color:#fff;padding:8px 18px;border-radius:20px;
       font-size:13px;z-index:15;display:none;white-space:nowrap;
+      backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.15);
     }
     #zoom-label{
-      position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
-      font-size:15px;font-weight:600;color:rgba(255,255,255,.75);
+      position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+      font-size:14px;font-weight:600;color:rgba(255,255,255,.85);
       z-index:35;pointer-events:none;letter-spacing:.4px;
-      display:none;text-shadow:0 1px 4px rgba(0,0,0,.8);
+      display:none;background:rgba(0,0,0,0.4);padding:4px 12px;border-radius:12px;
+      backdrop-filter:blur(4px);
     }
 
     #shutter-flash{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:40;transition:opacity .05s}
     #fullscreen-flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:200;transition:opacity .4s}
 
-    /* Zoom Control: Luôn hiện rõ mãi */
+    /* Thanh Zoom Dài & Trong Suốt Chuẩn */
     .zoom-control{
-      position:absolute;right:14px;top:50%;transform:translateY(-50%);
-      display:flex;flex-direction:column;align-items:center;gap:8px;
-      height:150px;z-index:25;pointer-events:auto;
+      position:absolute;right:16px;top:50%;transform:translateY(-50%);
+      display:flex;flex-direction:column;align-items:center;gap:12px;
+      height:210px;width:44px;z-index:25;pointer-events:auto;
       opacity:1 !important;
-      padding:10px 8px;
-      border-radius:16px;
-      background:rgba(0,0,0,.4);
-      backdrop-filter:blur(4px);
+      padding:16px 8px;
+      border-radius:22px;
+      background:rgba(30,30,35,0.45);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,0.15);
+      box-shadow:0 4px 20px rgba(0,0,0,0.2);
     }
     .zoom-control svg{
       width:18px;height:18px;flex-shrink:0;
@@ -96,20 +104,20 @@
     }
     .zoom-slider{
       writing-mode:vertical-lr;direction:rtl;
-      width:6px;height:120px;-webkit-appearance:none;appearance:none;
+      width:6px;height:140px;-webkit-appearance:none;appearance:none;
       background:rgba(255,255,255,.35);border-radius:3px;outline:none;
     }
     .zoom-slider::-webkit-slider-thumb{
       -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
-      background:#fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.5);
+      background:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4);
     }
 
     .left-controls{
-      position:absolute;left:12px;top:50%;transform:translateY(-50%);
+      position:absolute;left:14px;top:50%;transform:translateY(-50%);
       display:flex;flex-direction:column;align-items:center;z-index:30;gap:10px;
     }
     .left-divider{
-      width:20px;height:1px;background:rgba(255,255,255,.22);margin:2px 0;border:none;flex-shrink:0;
+      width:20px;height:1px;background:rgba(255,255,255,.2);margin:2px 0;border:none;flex-shrink:0;
     }
     #reset-btn{
       position:absolute;
@@ -118,60 +126,68 @@
       top:calc(100% + 14px);
       z-index:30;
     }
+    
+    /* Nhóm nút trong suốt */
     .flash-group{
       display:flex;flex-direction:column;align-items:center;
-      background:rgba(40,40,42,.92);border-radius:26px;padding:5px;gap:2px;position:relative;
+      background:rgba(45,45,50,0.4);
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:26px;padding:4px;gap:2px;position:relative;
     }
 
-    /* CSS Nút & Màu Active Vàng Hơi Cam (#ffaa00) + Icon Đen */
     .ctrl-btn{
-      width:40px;height:40px;border-radius:50%;border:none;
-      background:rgba(40,40,42,.92);color:#fff;
+      width:40px;height:40px;border-radius:50%;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(45,45,50,0.4);
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      color:#fff;
       display:flex;align-items:center;justify-content:center;cursor:pointer;
-      transition:transform .12s,background .15s,color .15s;position:relative;
+      transition:transform .12s,background .15s,color .15s,border-color .15s;position:relative;
     }
     .ctrl-btn:active{transform:scale(.9)}
     .ctrl-btn.active, .ctrl-btn.is-modified{
-      background:#ffaa00 !important;color:#000 !important;
+      background:#ffaa00 !important;color:#000 !important;border-color:#ffaa00 !important;
     }
     .ctrl-btn svg{width:18px;height:18px}
-    .filter-btn-lg{width:46px;height:46px}
-    .filter-btn-lg svg{width:26px;height:26px;fill:currentColor}
+    .filter-btn-lg{width:44px;height:44px}
+    .filter-btn-lg svg{width:24px;height:24px;fill:currentColor}
 
-    .flash-group .ctrl-btn{background:transparent}
+    .flash-group .ctrl-btn{background:transparent !important;border:none !important;backdrop-filter:none}
     .flash-group .ctrl-btn.active{background:#ffaa00 !important;color:#000 !important}
 
     #color-btn .dot{
       width:18px;height:18px;border-radius:50%;background:#fff;
-      border:1.5px solid rgba(255,255,255,.4);box-shadow:0 0 0 1px rgba(0,0,0,.2);
+      border:1.5px solid rgba(255,255,255,.5);box-shadow:0 0 0 1px rgba(0,0,0,.2);
     }
     #aspect-btn{
       width:40px;height:40px;border-radius:50%;
       font-size:11px;font-weight:800;letter-spacing:-.3px;
-      background:rgba(40,40,42,.92);
     }
 
     .popup-menu{
       display:none;position:fixed;z-index:60;
-      background:rgba(28,28,30,.95);border-radius:14px;padding:8px 12px;
-      box-shadow:0 8px 28px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);
+      background:rgba(30,30,35,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-radius:14px;padding:8px 12px;
+      box-shadow:0 8px 28px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);
     }
     .popup-menu.show{display:block}
 
     #color-palette{
       display:none;position:fixed;z-index:60;flex-direction:column;gap:12px;
-      background:rgba(28,28,30,.96);border-radius:18px;padding:14px 16px 16px;
-      box-shadow:0 8px 28px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.1);
+      background:rgba(30,30,35,0.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-radius:18px;padding:14px 16px 16px;
+      box-shadow:0 8px 28px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);
       min-width:160px;
     }
     #color-palette.show{display:flex}
     .panel-head{
       display:flex;align-items:center;justify-content:space-between;
-      font-size:15px;font-weight:600;color:#fff;padding:0 2px 2px;
+      font-size:14px;font-weight:600;color:#fff;padding:0 2px 2px;
     }
     .panel-head .close-x{
-      width:28px;height:28px;border:none;border-radius:50%;background:transparent;
-      color:rgba(255,255,255,.7);font-size:18px;cursor:pointer;line-height:1;
+      width:26px;height:26px;border:none;border-radius:50%;background:transparent;
+      color:rgba(255,255,255,.7);font-size:18px;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
     }
     .panel-head .close-x:hover{color:#fff;background:rgba(255,255,255,.1)}
@@ -186,14 +202,13 @@
 
     #filter-panel{
       display:none;position:fixed;z-index:60;flex-direction:column;gap:12px;
-      background:rgba(28,28,30,.96);border-radius:18px;padding:14px 16px 16px;
-      box-shadow:0 8px 28px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.1);
+      background:rgba(30,30,35,0.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-radius:18px;padding:14px 16px 16px;
+      box-shadow:0 8px 28px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);
       width:176px;
     }
     #filter-panel.show{display:flex}
-    .filter-grid{
-      display:grid;grid-template-columns:repeat(2,1fr);gap:12px 10px;
-    }
+    .filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 10px}
     .filter-item{
       display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;
       border:none;background:transparent;color:#fff;padding:0;
@@ -207,9 +222,10 @@
 
     #timer-menu{
       display:none;position:fixed;z-index:60;
-      background:rgba(28,28,30,.95);border-radius:12px;padding:6px;
+      background:rgba(30,30,35,0.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-radius:12px;padding:6px;
       flex-direction:column;gap:2px;min-width:72px;
-      box-shadow:0 8px 28px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);
+      box-shadow:0 8px 28px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);
     }
     #timer-menu.show{display:flex}
     .timer-opt{
@@ -221,25 +237,18 @@
 
     .adj-popup{
       display:none;position:fixed;z-index:60;
-      background:rgba(30,30,32,.96);border-radius:22px;padding:12px 16px 14px;
-      box-shadow:0 8px 28px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.08);
-      flex-direction:column;gap:10px;min-width:260px;
+      background:rgba(30,30,35,0.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-radius:20px;padding:12px 16px 14px;
+      box-shadow:0 8px 28px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);
+      flex-direction:column;gap:10px;min-width:250px;
     }
     .adj-popup.show{display:flex}
-    .adj-popup .row-top{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
-    }
-    .adj-popup .label{
-      font-size:13px;font-weight:500;color:rgba(255,255,255,.9);white-space:nowrap;
-      flex:1;text-align:center;
-    }
-    .adj-popup .icon-l,.adj-popup .icon-r{
-      width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-      font-size:15px;line-height:1;
-    }
+    .adj-popup .row-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .adj-popup .label{font-size:13px;font-weight:500;color:rgba(255,255,255,.9);white-space:nowrap;flex:1;text-align:center}
+    .adj-popup .icon-l,.adj-popup .icon-r{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1}
     .adj-popup input[type=range]{
       width:100%;-webkit-appearance:none;appearance:none;height:4px;
-      background:rgba(255,255,255,.22);border-radius:2px;outline:none;margin:0;
+      background:rgba(255,255,255,.25);border-radius:2px;outline:none;margin:0;
     }
     .adj-popup input[type=range]::-webkit-slider-thumb{
       -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
@@ -248,18 +257,22 @@
 
     #toast{
       position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-12px);
-      background:rgba(40,40,42,.95);color:#fff;padding:10px 16px;border-radius:11px;
+      background:rgba(30,30,35,.9);color:#fff;padding:10px 18px;border-radius:12px;
       font-size:14px;z-index:300;opacity:0;transition:all .25s;pointer-events:none;max-width:88%;text-align:center;
+      backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);
     }
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
     .right-controls{
-      position:absolute;right:12px;top:50%;transform:translateY(-50%);
+      position:absolute;right:14px;top:50%;transform:translateY(-50%);
       display:flex;flex-direction:column;align-items:center;gap:12px;z-index:30;
     }
     .mode-switcher{
       display:flex;flex-direction:column;gap:5px;
-      background:rgba(40,40,42,.92);border-radius:24px;padding:5px;
+      background:rgba(45,45,50,0.4);
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:24px;padding:4px;
     }
     .mode-btn{
       width:38px;height:38px;border-radius:50%;border:none;background:transparent;color:#aaa;
@@ -268,30 +281,43 @@
     .mode-btn.active{background:#ffaa00 !important;color:#000 !important}
     .mode-btn svg{width:18px;height:18px}
 
-    /* Nút Chụp Ảnh & Nút Quay Video: Tương phản rõ ràng trên nền Flash sáng */
+    /* Nút Chụp & Nút Quay: Mặc định Nền Tối => Nút SÁNG (Trắng) */
     #shutter{
       width:64px;height:64px;border-radius:50%;
-      border:3.5px solid #fff;background:rgba(0,0,0,0.25);
-      box-shadow:0 0 0 2px #000, 0 4px 14px rgba(0,0,0,.6);
+      border:3.5px solid #ffffff;background:rgba(0,0,0,0.25);
+      box-shadow:0 0 0 2px rgba(0,0,0,0.5), 0 4px 14px rgba(0,0,0,.5);
       cursor:pointer;position:relative;
-      transition:transform .1s,border-color .2s,box-shadow .2s;margin:2px 0;
+      transition:transform .1s,border-color .2s,background .2s,box-shadow .2s;margin:2px 0;
       flex-shrink:0;
     }
     #shutter::after{
       content:"";position:absolute;inset:5px;border-radius:50%;
-      background:#fff;
-      box-shadow:0 0 0 1.5px rgba(0,0,0,0.3);
+      background:#ffffff;
       transition:background .2s,border-radius .2s;
     }
-    #shutter:active{transform:scale(.9)}
+    #shutter:active{transform:scale(.92)}
     
-    /* Đồng bộ màu viền nút quay video trùng với viền/đốm đỏ */
-    #shutter.video-mode{border-color:#ff3b30;box-shadow:0 0 0 2px #000, 0 4px 14px rgba(0,0,0,.6)}
+    #shutter.video-mode{border-color:#ff3b30;box-shadow:0 0 0 2px rgba(0,0,0,0.5), 0 4px 14px rgba(0,0,0,.5)}
     #shutter.video-mode::after{inset:8px;border-radius:50%;background:#ff3b30;box-shadow:none}
-    #shutter.recording{border-color:#ff3b30;box-shadow:0 0 0 2px #000, 0 4px 14px rgba(0,0,0,.6)}
+    #shutter.recording{border-color:#ff3b30;box-shadow:0 0 0 2px rgba(0,0,0,0.5), 0 4px 14px rgba(0,0,0,.5)}
     #shutter.recording::after{inset:16px;border-radius:5px;background:#ff3b30;box-shadow:none}
 
-    /* Đang quay video: Ẩn các nút khác, ngoại trừ Nút Chụp, Zoom và Nút Lật ngang/dọc */
+    /* Khi gặp Nền SÁNG (Bật Flash màu sáng) => Chuyển Nút sang TỐI / ĐEN */
+    #shutter.dark-shutter{
+      border-color:#111111 !important;
+      box-shadow:0 0 0 2px rgba(255,255,255,0.8), 0 4px 14px rgba(0,0,0,0.3) !important;
+    }
+    #shutter.dark-shutter::after{
+      background:#111111 !important;
+    }
+    #shutter.dark-shutter.video-mode{
+      border-color:#d32f2f !important;
+    }
+    #shutter.dark-shutter.video-mode::after{
+      background:#d32f2f !important;
+    }
+
+    /* Đang quay video: Giữ lại Zoom & Lật hình */
     .recording-active .left-controls,
     .recording-active #reset-btn,
     .recording-active .mode-switcher,
@@ -305,22 +331,23 @@
       visibility:hidden !important;pointer-events:none !important;
     }
 
-    /* Cho phép Zoom và Lật hình hoạt động khi ĐANG quay video */
     .recording-active .zoom-control,
     .recording-active .flip-btn {
       visibility:visible !important;pointer-events:auto !important;
     }
 
+    /* Thanh đo âm thanh Micro (Mic Level Meter) */
     #mic-meter{
-      display:none;position:fixed;left:18px;bottom:16px;z-index:36;
+      display:none;position:fixed;left:18px;bottom:18px;z-index:36;
       align-items:center;gap:8px;pointer-events:none;
-      opacity:0;transform:translateY(8px);
-      transition:opacity .25s ease, transform .25s ease;
+      background:rgba(30,30,35,0.5);padding:6px 12px;border-radius:16px;
+      backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);
+      transition:opacity .25s ease;
     }
-    #mic-meter.show{display:flex;opacity:1;transform:translateY(0)}
-    #mic-meter svg{width:14px;height:14px;flex-shrink:0;opacity:.85}
+    #mic-meter.show{display:flex}
+    #mic-meter svg{width:15px;height:15px;flex-shrink:0;fill:none;stroke:#fff;stroke-width:2}
     #mic-meter .bar-bg{
-      width:72px;height:6px;border-radius:3px;background:rgba(255,255,255,.2);
+      width:70px;height:6px;border-radius:3px;background:rgba(255,255,255,.25);
       overflow:hidden;
     }
     #mic-meter .bar-fill{
@@ -330,15 +357,17 @@
     .recording-active #shutter{visibility:visible !important;pointer-events:auto !important}
     .recording-active #mic-meter{display:flex !important;visibility:visible !important}
 
-    /* Nút Lật ngang/dọc Active sang màu Vàng Cam + Icon Đen */
     .flip-btn{
-      width:36px;height:36px;border-radius:50%;border:none;
-      background:rgba(40,40,42,.92);color:#fff;
+      width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(45,45,50,0.4);
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      color:#fff;
       display:flex;align-items:center;justify-content:center;cursor:pointer;
-      flex-shrink:0;transition:background .15s, color .15s;
+      flex-shrink:0;transition:background .15s, color .15s, border-color .15s;
     }
     .flip-btn svg{width:16px;height:16px}
-    .flip-btn.active{background:#ffaa00 !important;color:#000 !important}
+    .flip-btn.active{background:#ffaa00 !important;color:#000 !important;border-color:#ffaa00 !important}
 
     #qr-popup{
       position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;
@@ -357,18 +386,18 @@
     .qr-actions .close-btn{background:#3a3a3c;color:#fff}
 
     @media(max-width:600px){
-      #stage{width:min(calc(100vw - 130px),calc(86vh * 16 / 9));height:min(calc((100vw - 130px)*9/16),86vh)}
+      #stage{width:calc(100vw - 110px)}
       .left-controls{left:6px}.right-controls{right:6px}
-      #shutter{width:56px;height:56px}
-      .zoom-control{right:10px;height:130px}
-      .zoom-slider{height:100px}
+      #shutter{width:58px;height:58px}
+      .zoom-control{right:8px;height:180px;width:38px}
+      .zoom-slider{height:120px}
     }
   </style>
 </head>
 <body>
 
 <div id="app">
-  <div id="fps">FPS: -- <span class="ver">| v1.0.4</span></div>
+  <div id="fps">FPS: -- <span class="ver">| v1.0.5</span></div>
 
   <div id="stage">
     <div id="camera-frame">
@@ -391,7 +420,7 @@
       <div id="qr-hint">Đưa QR vào khung hình để quét</div>
     </div>
 
-    <!-- Thanh Zoom: Luôn hiện rõ ràng -->
+    <!-- Thanh Zoom capsule kéo dài -->
     <div class="zoom-control" id="zoom-control">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="10.5" cy="10.5" r="6.5"/>
@@ -417,7 +446,6 @@
       </button>
     </div>
 
-    <!-- Nút Hẹn Giờ: Icon Đồng Hồ Bấm Giờ với thanh ngang trên đầu -->
     <button class="ctrl-btn" id="timer-btn" title="Hẹn giờ">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M9 2h6"/>
@@ -580,20 +608,24 @@
     </div>
   </div>
   <div id="fullscreen-flash"></div>
+  
+  <!-- Thanh đo Micro hiển thị khi vào chế độ Quay Video -->
   <div id="mic-meter">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+    <svg viewBox="0 0 24 24">
       <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
       <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
     </svg>
     <div class="bar-bg"><div class="bar-fill" id="mic-bar"></div></div>
   </div>
+
   <div id="zoom-label">1x</div>
   <div id="toast"></div>
 </div>
 
 <script>
 const state = {
-  stream:null, mode:'photo', isRecording:false, mediaRecorder:null, recordedChunks:[],
+  stream:null, audioStream:null, audioTrack:null,
+  mode:'photo', isRecording:false, mediaRecorder:null, recordedChunks:[],
   flipH:false, flipV:false, flashOn:false, flashColor:'#ffffff',
   timerSec:0, isCounting:false, facingMode:'user', forceAspect:'16:9',
   recAnimId:null, qrScanning:false, qrAnimId:null,
@@ -632,7 +664,6 @@ const tempPopup=document.getElementById('temp-popup');
 const evSlider=document.getElementById('ev-slider');
 const satSlider=document.getElementById('sat-slider');
 const tempSlider=document.getElementById('temp-slider');
-const zoomControl=document.getElementById('zoom-control');
 const zoomSlider=document.getElementById('zoom-slider');
 const fpsEl=document.getElementById('fps');
 const qrPopup=document.getElementById('qr-popup');
@@ -642,11 +673,34 @@ const shutterFlash=document.getElementById('shutter-flash');
 const fullscreenFlash=document.getElementById('fullscreen-flash');
 const flipVBtn=document.getElementById('flip-v');
 const flipHBtn=document.getElementById('flip-h');
+const micMeter=document.getElementById('mic-meter');
+
+// Tính độ sáng của màu hex để tự chuyển giao diện sáng/tối
+function isColorLight(hex) {
+  if (!hex || hex.length < 6) return true;
+  const c = hex.replace('#', '');
+  const r = parseInt(c.substr(0, 2), 16);
+  const g = parseInt(c.substr(2, 2), 16);
+  const b = parseInt(c.substr(4, 2), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 150;
+}
+
+function updateShutterTheme() {
+  if (state.flashOn) {
+    if (isColorLight(state.flashColor)) {
+      shutter.classList.add('dark-shutter');
+    } else {
+      shutter.classList.remove('dark-shutter');
+    }
+  } else {
+    shutter.classList.remove('dark-shutter');
+  }
+}
 
 function clampPan() {
   if (state.zoom <= 1) {
-    state.panX = 0;
-    state.panY = 0;
+    state.panX = 0; state.panY = 0;
     return;
   }
   const rect = cameraFrame.getBoundingClientRect();
@@ -685,8 +739,9 @@ function updateFlashBg(){
   if (state.flashOn) {
     app.style.backgroundColor = state.flashColor;
   } else {
-    app.style.backgroundColor = '#000';
+    app.style.backgroundColor = '#222226'; // Nền xám đen mặc định dịu mắt
   }
+  updateShutterTheme();
 }
 
 function placePopup(el, btn, align){
@@ -774,6 +829,7 @@ function applyVideoTransform(){
   }
 }
 
+// Khởi tạo camera (Mặc định CHỈ xin quyền Video, KHÔNG dùng Mic ở Chụp/QR)
 async function initCamera() {
   if (state.stream) {
     state.stream.getTracks().forEach(track => track.stop());
@@ -785,19 +841,42 @@ async function initCamera() {
       height: { ideal: 1080 },
       frameRate: { ideal: 60, min: 30 }
     },
-    audio: true
+    audio: false // Tắt mic mặc định
   };
 
   try {
     state.stream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = state.stream;
     noCamera.classList.add('hidden');
-    setupAudioMeter(state.stream);
     startFpsCalculation();
   } catch (err) {
-    console.error("Không thể kết nối Camera/Microphone:", err);
+    console.error("Không thể kết nối Camera:", err);
     noCamera.classList.remove('hidden');
-    showToast("Không thể truy cập Camera hoặc Microphone");
+    showToast("Không thể truy cập Camera");
+  }
+}
+
+// Bật micro riêng chỉ khi vào chế độ Quay Video
+async function enableAudioTrack() {
+  if (state.audioTrack) return;
+  try {
+    state.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.audioTrack = state.audioStream.getAudioTracks()[0];
+    setupAudioMeter(state.audioStream);
+  } catch (e) {
+    console.warn("Không thể truy cập Micro:", e);
+  }
+}
+
+// Tắt micro khi rời khỏi chế độ Quay Video
+function disableAudioTrack() {
+  if (state.audioTrack) {
+    state.audioTrack.stop();
+    state.audioTrack = null;
+  }
+  if (state.audioStream) {
+    state.audioStream.getTracks().forEach(t => t.stop());
+    state.audioStream = null;
   }
 }
 
@@ -809,7 +888,7 @@ function startFpsCalculation() {
     frameCount++;
     if (now - lastTime >= 1000) {
       const currentFps = Math.round((frameCount * 1000) / (now - lastTime));
-      fpsEl.innerHTML = `FPS: ${currentFps} <span class="ver">| v1.0.4</span>`;
+      fpsEl.innerHTML = `FPS: ${currentFps} <span class="ver">| v1.0.5</span>`;
       frameCount = 0;
       lastTime = now;
     }
@@ -827,6 +906,7 @@ function startFpsCalculation() {
   }
 }
 
+// Thanh đo âm thanh Micro sống động
 function setupAudioMeter(stream) {
   try {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -838,15 +918,15 @@ function setupAudioMeter(stream) {
     const micBar = document.getElementById('mic-bar');
 
     function updateMeter() {
-      if (state.isRecording) {
+      if (state.mode === 'video' && state.audioTrack) {
         analyser.getByteFrequencyData(dataArray);
         let sum = 0;
         for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
         let average = sum / dataArray.length;
         let pct = Math.min(100, Math.round((average / 128) * 100));
         if (micBar) micBar.style.width = pct + '%';
+        requestAnimationFrame(updateMeter);
       }
-      requestAnimationFrame(updateMeter);
     }
     updateMeter();
   } catch (e) {}
@@ -870,7 +950,7 @@ function updateAspectRatio() {
 }
 window.addEventListener('resize', updateAspectRatio);
 
-function setMode(mode) {
+async function setMode(mode) {
   if (state.mode === mode) return;
   state.mode = mode;
   cameraFrame.classList.add('mode-switching');
@@ -885,6 +965,16 @@ function setMode(mode) {
   shutter.style.visibility = mode === 'qr' ? 'hidden' : 'visible';
   shutter.style.pointerEvents = mode === 'qr' ? 'none' : 'auto';
   shutter.className = mode === 'video' ? 'video-mode' : '';
+  updateShutterTheme();
+
+  // Xử lý bật / tắt Micro theo đúng chế độ
+  if (mode === 'video') {
+    await enableAudioTrack();
+    micMeter.classList.add('show');
+  } else {
+    disableAudioTrack();
+    micMeter.classList.remove('show');
+  }
 
   if (mode === 'qr') {
     startQRScan();
@@ -983,8 +1073,8 @@ function startRecording() {
   state.recordedChunks = [];
   const recStream = canvas.captureStream(30);
   
-  if (state.stream.getAudioTracks().length > 0) {
-    recStream.addTrack(state.stream.getAudioTracks()[0]);
+  if (state.audioTrack) {
+    recStream.addTrack(state.audioTrack);
   }
 
   state.mediaRecorder = new MediaRecorder(recStream, { mimeType: 'video/webm' });
@@ -1220,7 +1310,7 @@ document.getElementById('qr-close').addEventListener('click', () => {
   if (state.mode === 'qr') startQRScan();
 });
 
-/* Kéo di chuyển góc nhìn (Pan/Drag) khi Zoom */
+/* Pan/Drag khi Zoom */
 let isDragging = false;
 let startX = 0, startY = 0;
 let initialPanX = 0, initialPanY = 0;
@@ -1230,10 +1320,8 @@ function onPointerDown(e) {
   isDragging = true;
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
   const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-  startX = clientX;
-  startY = clientY;
-  initialPanX = state.panX;
-  initialPanY = state.panY;
+  startX = clientX; startY = clientY;
+  initialPanX = state.panX; initialPanY = state.panY;
   videoWrap.style.cursor = 'grabbing';
 }
 
