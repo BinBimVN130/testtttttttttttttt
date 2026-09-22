@@ -12,9 +12,9 @@
 
     #fps{
       position:fixed;top:10px;left:12px;z-index:40;
-      font-size:11px;font-weight:400;color:rgba(255,255,255,.45);
+      font-size:11px;font-weight:400;color:rgba(255,255,255,.6);
       letter-spacing:.2px;pointer-events:none;
-      font-family:inherit;
+      font-family:monospace;
     }
     #fps .ver{opacity:.7;font-weight:400}
 
@@ -38,13 +38,14 @@
     #video-wrap{width:100%;height:100%;overflow:hidden;position:relative}
     #video{
       width:100%;height:100%;object-fit:cover;display:block;background:#000;
-      transform-origin:center center;will-change:transform;
+      transform-origin:center center;will-change:transform, filter;
+      transform: translateZ(0);
     }
     #canvas,#rec-canvas{display:none}
 
     #no-camera{
       position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-      background:#8a8a8a;z-index:10;
+      background:#222;z-index:10;
     }
     #no-camera.hidden{display:none}
     #no-camera svg{width:72px;height:72px;opacity:.7}
@@ -134,8 +135,11 @@
     .ctrl-btn.active{background:#fff;color:#000}
     .ctrl-btn svg{width:18px;height:18px}
     .filter-btn-lg{width:46px;height:46px}
-    .filter-btn-lg svg{width:26px;height:26px}
+    .filter-btn-lg svg{width:26px;height:26px;fill:currentColor}
+    
+    /* Khi bộ lọc hoặc các nút điều chỉnh kích hoạt */
     .ctrl-btn.is-modified{background:#fff;color:#000}
+    .ctrl-btn.is-modified svg circle{fill:#000 !important}
 
     .flash-group .ctrl-btn{background:transparent}
     .flash-group .ctrl-btn.active{background:#fff;color:#000}
@@ -154,7 +158,6 @@
       display:none;position:fixed;z-index:60;
       background:rgba(28,28,30,.95);border-radius:14px;padding:8px 12px;
       box-shadow:0 8px 28px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);
-      backdrop-filter:none;
     }
     .popup-menu.show{display:block}
 
@@ -282,9 +285,6 @@
     #shutter.video-mode::after{inset:8px;border-radius:50%;background:#ff3b30}
     #shutter.recording{border-color:#ff3b30}
     #shutter.recording::after{inset:16px;border-radius:5px;background:#ff3b30}
-    #shutter.dark-mode{border-color:#1c1c1e}
-    #shutter.dark-mode::after{background:#1c1c1e}
-    #shutter.hidden-mode{visibility:hidden;pointer-events:none}
 
     .recording-active .left-controls,
     .recording-active #reset-btn,
@@ -354,15 +354,9 @@
   </style>
 </head>
 <body>
-<svg id="svg-filters" width="0" height="0" style="position:absolute">
-  <defs>
-    <filter id="sharpen" color-interpolation-filters="sRGB">
-      <feConvolveMatrix order="3" kernelMatrix="0 -1 0 -1 5 -1 0 -1 0" preserveAlpha="true"/>
-    </filter>
-  </defs>
-</svg>
+
 <div id="app">
-  <div id="fps">FPS: -- <span class="ver">| v1.0.0</span></div>
+  <div id="fps">FPS: -- <span class="ver">| v1.0.1</span></div>
 
   <div id="stage">
     <div id="camera-frame">
@@ -397,9 +391,9 @@
   <div class="left-controls">
     <button class="ctrl-btn filter-btn-lg" id="filter-btn" title="Bộ lọc">
       <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="18" cy="20" r="11" fill="#ffffff" fill-opacity="0.42"/>
-        <circle cx="30" cy="20" r="11" fill="#ffffff" fill-opacity="0.42"/>
-        <circle cx="24" cy="29" r="11" fill="#ffffff" fill-opacity="0.42"/>
+        <circle cx="18" cy="20" r="11" fill="currentColor" fill-opacity="0.6"/>
+        <circle cx="30" cy="20" r="11" fill="currentColor" fill-opacity="0.6"/>
+        <circle cx="24" cy="29" r="11" fill="currentColor" fill-opacity="0.6"/>
       </svg>
     </button>
     <div class="flash-group">
@@ -582,7 +576,6 @@ const state = {
   timerSec:0, isCounting:false, facingMode:'user', forceAspect:'16:9',
   recAnimId:null, qrScanning:false, qrAnimId:null,
   zoom:1, panX:0, panY:0, isPanning:false,
-  panStartX:0, panStartY:0, panOriginX:0, panOriginY:0,
   ev:0, sat:1, temp:0, filter:'none',
   frameCount:0, lastFpsTime:performance.now()
 };
@@ -594,8 +587,6 @@ const videoWrap=document.getElementById('video-wrap');
 const video=document.getElementById('video');
 const canvas=document.getElementById('canvas');
 const ctx=canvas.getContext('2d',{willReadFrequently:true});
-const recCanvas=document.getElementById('rec-canvas');
-const recCtx=recCanvas.getContext('2d');
 const noCamera=document.getElementById('no-camera');
 const countdownEl=document.getElementById('countdown');
 const recTimerEl=document.getElementById('rec-timer');
@@ -706,11 +697,16 @@ function applyFilters(){
   const satMod = Math.abs(state.sat - 1) > 0.02;
   const tempMod = Math.abs(state.temp) > 0.02;
   const filterMod = state.filter && state.filter !== 'none';
+  
   evBtn.classList.toggle('is-modified', evMod);
   satBtn.classList.toggle('is-modified', satMod);
   tempBtn.classList.toggle('is-modified', tempMod);
+  
   const filterBtn = document.getElementById('filter-btn');
-  if(filterBtn) filterBtn.classList.toggle('is-modified', filterMod);
+  if(filterBtn) {
+    filterBtn.classList.toggle('is-modified', filterMod);
+  }
+
   const resetBtn = document.getElementById('reset-btn');
   if(resetBtn) resetBtn.style.display = (evMod || satMod || tempMod || filterMod) ? 'flex' : 'none';
 }
@@ -718,7 +714,7 @@ function applyFilters(){
 function applyVideoTransform(){
   const sx=state.flipH?-state.zoom:state.zoom;
   const sy=state.flipV?-state.zoom:state.zoom;
-  video.style.transform=`translate(${state.panX}px,${state.panY}px) scale(${sx},${sy})`;
+  video.style.transform=`translate(${state.panX}px,${state.panY}px) scale(${sx},${sy}) translateZ(0)`;
   flipVBtn.classList.toggle('active',state.flipV);
   flipHBtn.classList.toggle('active', state.flipH);
   const label = document.getElementById('zoom-label');
@@ -736,7 +732,8 @@ async function initCamera() {
     video: {
       facingMode: state.facingMode,
       width: { ideal: 1920 },
-      height: { ideal: 1080 }
+      height: { ideal: 1080 },
+      frameRate: { ideal: 60, min: 30 }
     },
     audio: true
   };
@@ -746,10 +743,38 @@ async function initCamera() {
     video.srcObject = state.stream;
     noCamera.classList.add('hidden');
     setupAudioMeter(state.stream);
+    startFpsCalculation();
   } catch (err) {
     console.error("Không thể kết nối Camera/Microphone:", err);
     noCamera.classList.remove('hidden');
     showToast("Không thể truy cập Camera hoặc Microphone");
+  }
+}
+
+// Sửa tính năng đo FPS chuẩn xác từ luồng Video thực tế
+function startFpsCalculation() {
+  let frameCount = 0;
+  let lastTime = performance.now();
+
+  function onFrame(now, metadata) {
+    frameCount++;
+    if (now - lastTime >= 1000) {
+      const currentFps = Math.round((frameCount * 1000) / (now - lastTime));
+      fpsEl.innerHTML = `FPS: ${currentFps} <span class="ver">| v1.0.1</span>`;
+      frameCount = 0;
+      lastTime = now;
+    }
+    if ('requestVideoFrameCallback' in video) {
+      video.requestVideoFrameCallback(onFrame);
+    } else {
+      setTimeout(() => onFrame(performance.now()), 1000 / 30);
+    }
+  }
+
+  if ('requestVideoFrameCallback' in video) {
+    video.requestVideoFrameCallback(onFrame);
+  } else {
+    onFrame(performance.now());
   }
 }
 
@@ -777,19 +802,6 @@ function setupAudioMeter(stream) {
     updateMeter();
   } catch (e) {}
 }
-
-function loopFps() {
-  state.frameCount++;
-  const now = performance.now();
-  if (now - state.lastFpsTime >= 1000) {
-    const fps = Math.round((state.frameCount * 1000) / (now - state.lastFpsTime));
-    fpsEl.innerHTML = `FPS: ${fps} <span class="ver">| v1.0.0</span>`;
-    state.frameCount = 0;
-    state.lastFpsTime = now;
-  }
-  requestAnimationFrame(loopFps);
-}
-requestAnimationFrame(loopFps);
 
 function updateAspectRatio() {
   const [wRatio, hRatio] = state.forceAspect.split(':').map(Number);
