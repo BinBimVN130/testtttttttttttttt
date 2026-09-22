@@ -35,13 +35,14 @@
       opacity:.5;
       transform:scale(0.98);
     }
-    #video-wrap{width:100%;height:100%;overflow:hidden;position:relative}
+    #video-wrap{width:100%;height:100%;overflow:hidden;position:relative;cursor:default;touch-action:none}
     #video{
       width:100%;height:100%;object-fit:cover;display:block;background:#000;
       transform-origin:center center;will-change:transform, filter;
       transform: translateZ(0);
+      pointer-events:none;
     }
-    #canvas,#rec-canvas{display:none}
+    #canvas,#rec-canvas,#qr-canvas{display:none}
 
     #no-camera{
       position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -358,7 +359,7 @@
 <body>
 
 <div id="app">
-  <div id="fps">FPS: -- <span class="ver">| v1.0.1</span></div>
+  <div id="fps">FPS: -- <span class="ver">| v1.0.2</span></div>
 
   <div id="stage">
     <div id="camera-frame">
@@ -367,6 +368,7 @@
       </div>
       <canvas id="canvas"></canvas>
       <canvas id="rec-canvas"></canvas>
+      <canvas id="qr-canvas"></canvas>
       <div id="shutter-flash"></div>
       <div id="no-camera">
         <svg viewBox="0 0 24 24" fill="none">
@@ -377,7 +379,7 @@
       </div>
       <div id="countdown"></div>
       <div id="rec-timer">00:00:00</div>
-      <div id="qr-hint">Đưa QR vào khung hình để bắt đầu quét</div>
+      <div id="qr-hint">Đưa QR vào khung hình để quét nhanh</div>
     </div>
 
     <div class="zoom-control" id="zoom-control">
@@ -544,8 +546,11 @@
     <button class="flip-btn" id="flip-v" title="Lật đứng">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>
     </button>
+    <!-- Biểu tượng Lật ngang mới: Mũi tên 2 đầu -->
     <button class="flip-btn" id="flip-h" title="Lật ngang">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4 4-4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M3 12h18"/>
+      </svg>
     </button>
   </div>
 
@@ -577,9 +582,8 @@ const state = {
   flipH:false, flipV:false, flashOn:false, flashColor:'#ffffff',
   timerSec:0, isCounting:false, facingMode:'user', forceAspect:'16:9',
   recAnimId:null, qrScanning:false, qrAnimId:null,
-  zoom:1, panX:0, panY:0, isPanning:false,
-  ev:0, sat:1, temp:0, filter:'none',
-  frameCount:0, lastFpsTime:performance.now()
+  zoom:1, panX:0, panY:0,
+  ev:0, sat:1, temp:0, filter:'none'
 };
 
 const app=document.getElementById('app');
@@ -589,6 +593,9 @@ const videoWrap=document.getElementById('video-wrap');
 const video=document.getElementById('video');
 const canvas=document.getElementById('canvas');
 const ctx=canvas.getContext('2d',{willReadFrequently:true});
+const qrCanvas=document.getElementById('qr-canvas');
+const qrCtx=qrCanvas.getContext('2d',{willReadFrequently:true});
+
 const noCamera=document.getElementById('no-camera');
 const countdownEl=document.getElementById('countdown');
 const recTimerEl=document.getElementById('rec-timer');
@@ -630,6 +637,19 @@ function triggerZoomActive() {
   zoomHideTimer = setTimeout(() => {
     zoomControl.classList.remove('active-adjust');
   }, 1500);
+}
+
+function clampPan() {
+  if (state.zoom <= 1) {
+    state.panX = 0;
+    state.panY = 0;
+    return;
+  }
+  const rect = cameraFrame.getBoundingClientRect();
+  const maxPanX = (rect.width * (state.zoom - 1)) / 2;
+  const maxPanY = (rect.height * (state.zoom - 1)) / 2;
+  state.panX = Math.min(maxPanX, Math.max(-maxPanX, state.panX));
+  state.panY = Math.min(maxPanY, Math.max(-maxPanY, state.panY));
 }
 
 function showToast(msg,ms=2500){
@@ -726,11 +746,15 @@ function applyFilters(){
 }
 
 function applyVideoTransform(){
+  clampPan();
   const sx=state.flipH?-state.zoom:state.zoom;
   const sy=state.flipV?-state.zoom:state.zoom;
   video.style.transform=`translate(${state.panX}px,${state.panY}px) scale(${sx},${sy}) translateZ(0)`;
   flipVBtn.classList.toggle('active',state.flipV);
   flipHBtn.classList.toggle('active', state.flipH);
+  
+  videoWrap.style.cursor = state.zoom > 1 ? 'grab' : 'default';
+
   const label = document.getElementById('zoom-label');
   if (label) {
     label.textContent = `${state.zoom.toFixed(1)}x`;
@@ -773,7 +797,7 @@ function startFpsCalculation() {
     frameCount++;
     if (now - lastTime >= 1000) {
       const currentFps = Math.round((frameCount * 1000) / (now - lastTime));
-      fpsEl.innerHTML = `FPS: ${currentFps} <span class="ver">| v1.0.1</span>`;
+      fpsEl.innerHTML = `FPS: ${currentFps} <span class="ver">| v1.0.2</span>`;
       frameCount = 0;
       lastTime = now;
     }
@@ -831,12 +855,12 @@ function updateAspectRatio() {
   cameraFrame.style.width = `${targetW}px`;
   cameraFrame.style.height = `${targetH}px`;
 
-  // Xử lý ẩn/hiện thanh Zoom theo tỷ lệ khung hình
   if (state.forceAspect === '4:3' || state.forceAspect === '1:1') {
     zoomControl.classList.add('always-visible');
   } else {
     zoomControl.classList.remove('always-visible');
   }
+  applyVideoTransform();
 }
 window.addEventListener('resize', updateAspectRatio);
 
@@ -851,6 +875,7 @@ function setMode(mode) {
   });
 
   qrHint.style.display = mode === 'qr' ? 'block' : 'none';
+  shutter.style.display = mode === 'qr' ? 'none' : 'block';
   shutter.className = mode === 'video' ? 'video-mode' : '';
 
   if (mode === 'qr') {
@@ -860,29 +885,47 @@ function setMode(mode) {
   }
 }
 
+/* Thuật toán Quét QR Siêu Nhanh & Tối Ưu Hiệu Năng (Realtime, No Lag) */
 function startQRScan() {
   state.qrScanning = true;
-  function scan() {
+  let lastScanTime = 0;
+
+  function scan(now) {
     if (!state.qrScanning) return;
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: "dontInvert",
-      });
-      if (code && code.data) {
-        playBeep(1200, 0.15);
-        qrResult.value = code.data;
-        qrPopup.classList.add('show');
-        state.qrScanning = false;
-        return;
+    
+    // Giới hạn tần số quét ~12 FPS để vừa đảm bảo phản hồi tức thì vừa không làm đơ giật UI
+    if (video.readyState === video.HAVE_ENOUGH_DATA && (now - lastScanTime > 80)) {
+      lastScanTime = now;
+      
+      // Tối ưu: Hạ quy mô canvas quét về 480px max để jsQR xử lý nhẹ hơn gấp 10 lần
+      const maxDim = 480;
+      let scale = Math.min(1, maxDim / Math.max(video.videoWidth, video.videoHeight));
+      let sw = Math.floor(video.videoWidth * scale);
+      let sh = Math.floor(video.videoHeight * scale);
+
+      if (sw > 0 && sh > 0) {
+        if (qrCanvas.width !== sw || qrCanvas.height !== sh) {
+          qrCanvas.width = sw;
+          qrCanvas.height = sh;
+        }
+        qrCtx.drawImage(video, 0, 0, sw, sh);
+        const imageData = qrCtx.getImageData(0, 0, sw, sh);
+        const code = jsQR(imageData.data, sw, sh, {
+          inversionAttempts: "dontInvert",
+        });
+
+        if (code && code.data) {
+          playBeep(1200, 0.15);
+          qrResult.value = code.data;
+          qrPopup.classList.add('show');
+          state.qrScanning = false;
+          return;
+        }
       }
     }
     state.qrAnimId = requestAnimationFrame(scan);
   }
-  scan();
+  state.qrAnimId = requestAnimationFrame(scan);
 }
 
 function stopQRScan() {
@@ -911,6 +954,7 @@ function takePhoto() {
   ctx.filter = video.style.filter;
   ctx.translate(w / 2, h / 2);
   ctx.scale(state.flipH ? -state.zoom : state.zoom, state.flipV ? -state.zoom : state.zoom);
+  ctx.translate(state.panX, state.panY);
   ctx.translate(-w / 2, -h / 2);
   ctx.drawImage(video, 0, 0, w, h);
   ctx.restore();
@@ -979,6 +1023,7 @@ function startRecording() {
     ctx.filter = video.style.filter;
     ctx.translate(w / 2, h / 2);
     ctx.scale(state.flipH ? -state.zoom : state.zoom, state.flipV ? -state.zoom : state.zoom);
+    ctx.translate(state.panX, state.panY);
     ctx.translate(-w / 2, -h / 2);
     ctx.drawImage(video, 0, 0, w, h);
     ctx.restore();
@@ -1172,6 +1217,51 @@ document.getElementById('qr-close').addEventListener('click', () => {
   qrPopup.classList.remove('show');
   if (state.mode === 'qr') startQRScan();
 });
+
+/* Tính năng giữ và kéo để di chuyển góc nhìn (Pan/Drag) khi Zoom */
+let isDragging = false;
+let startX = 0, startY = 0;
+let initialPanX = 0, initialPanY = 0;
+
+function onPointerDown(e) {
+  if (state.zoom <= 1) return;
+  isDragging = true;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  startX = clientX;
+  startY = clientY;
+  initialPanX = state.panX;
+  initialPanY = state.panY;
+  videoWrap.style.cursor = 'grabbing';
+}
+
+function onPointerMove(e) {
+  if (!isDragging || state.zoom <= 1) return;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  
+  const dx = clientX - startX;
+  const dy = clientY - startY;
+
+  state.panX = initialPanX + dx;
+  state.panY = initialPanY + dy;
+
+  applyVideoTransform();
+}
+
+function onPointerUp() {
+  if (!isDragging) return;
+  isDragging = false;
+  videoWrap.style.cursor = state.zoom > 1 ? 'grab' : 'default';
+}
+
+videoWrap.addEventListener('mousedown', onPointerDown);
+window.addEventListener('mousemove', onPointerMove);
+window.addEventListener('mouseup', onPointerUp);
+
+videoWrap.addEventListener('touchstart', onPointerDown, { passive: true });
+window.addEventListener('touchmove', onPointerMove, { passive: true });
+window.addEventListener('touchend', onPointerUp);
 
 stage.addEventListener('wheel', (e) => {
   e.preventDefault();
