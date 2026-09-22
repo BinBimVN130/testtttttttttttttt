@@ -79,19 +79,22 @@
     #shutter-flash{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:40;transition:opacity .05s}
     #fullscreen-flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:200;transition:opacity .4s}
 
+    /* Zoom Control CSS Dynamic */
     .zoom-control{
       position:absolute;right:14px;top:50%;transform:translateY(-50%);
       display:flex;flex-direction:column;align-items:center;gap:8px;
       height:150px;z-index:25;pointer-events:auto;
       opacity:0.28;
-      transition:opacity .18s ease;
+      transition:opacity .25s ease;
       padding:10px 8px;
       border-radius:16px;
     }
+    .zoom-control.always-visible,
     .zoom-control.near,
+    .zoom-control.active-adjust,
     .zoom-control:hover,
     .zoom-control:focus-within{
-      opacity:1;
+      opacity:1 !important;
     }
     .zoom-control svg{
       width:18px;height:18px;flex-shrink:0;
@@ -137,7 +140,6 @@
     .filter-btn-lg{width:46px;height:46px}
     .filter-btn-lg svg{width:26px;height:26px;fill:currentColor}
     
-    /* Khi bộ lọc hoặc các nút điều chỉnh kích hoạt */
     .ctrl-btn.is-modified{background:#fff;color:#000}
     .ctrl-btn.is-modified svg circle{fill:#000 !important}
 
@@ -543,7 +545,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>
     </button>
     <button class="flip-btn" id="flip-h" title="Lật ngang">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4 4-4"/></svg>
     </button>
   </div>
 
@@ -608,6 +610,7 @@ const tempPopup=document.getElementById('temp-popup');
 const evSlider=document.getElementById('ev-slider');
 const satSlider=document.getElementById('sat-slider');
 const tempSlider=document.getElementById('temp-slider');
+const zoomControl=document.getElementById('zoom-control');
 const zoomSlider=document.getElementById('zoom-slider');
 const fpsEl=document.getElementById('fps');
 const qrPopup=document.getElementById('qr-popup');
@@ -617,6 +620,17 @@ const shutterFlash=document.getElementById('shutter-flash');
 const fullscreenFlash=document.getElementById('fullscreen-flash');
 const flipVBtn=document.getElementById('flip-v');
 const flipHBtn=document.getElementById('flip-h');
+
+let zoomHideTimer = null;
+
+function triggerZoomActive() {
+  if (state.forceAspect !== '16:9') return;
+  zoomControl.classList.add('active-adjust');
+  clearTimeout(zoomHideTimer);
+  zoomHideTimer = setTimeout(() => {
+    zoomControl.classList.remove('active-adjust');
+  }, 1500);
+}
 
 function showToast(msg,ms=2500){
   toast.textContent=msg;toast.classList.add('show');
@@ -751,12 +765,11 @@ async function initCamera() {
   }
 }
 
-// Sửa tính năng đo FPS chuẩn xác từ luồng Video thực tế
 function startFpsCalculation() {
   let frameCount = 0;
   let lastTime = performance.now();
 
-  function onFrame(now, metadata) {
+  function onFrame(now) {
     frameCount++;
     if (now - lastTime >= 1000) {
       const currentFps = Math.round((frameCount * 1000) / (now - lastTime));
@@ -817,6 +830,13 @@ function updateAspectRatio() {
 
   cameraFrame.style.width = `${targetW}px`;
   cameraFrame.style.height = `${targetH}px`;
+
+  // Xử lý ẩn/hiện thanh Zoom theo tỷ lệ khung hình
+  if (state.forceAspect === '4:3' || state.forceAspect === '1:1') {
+    zoomControl.classList.add('always-visible');
+  } else {
+    zoomControl.classList.remove('always-visible');
+  }
 }
 window.addEventListener('resize', updateAspectRatio);
 
@@ -1014,6 +1034,11 @@ flipHBtn.addEventListener('click', () => { state.flipH = !state.flipH; applyVide
 zoomSlider.addEventListener('input', (e) => {
   state.zoom = parseFloat(e.target.value);
   applyVideoTransform();
+  triggerZoomActive();
+});
+
+zoomSlider.addEventListener('change', () => {
+  triggerZoomActive();
 });
 
 flashBtn.addEventListener('click', () => {
@@ -1154,6 +1179,7 @@ stage.addEventListener('wheel', (e) => {
   state.zoom = Math.min(10, Math.max(1, z));
   zoomSlider.value = state.zoom;
   applyVideoTransform();
+  triggerZoomActive();
 }, { passive: false });
 
 initCamera();
