@@ -406,6 +406,8 @@
     .app-tip.from-left.show{ opacity:1; transform:translate(0,-50%) translateX(0); }
     .app-tip.from-right{ transform:translate(-100%,-50%) translateX(6px); }
     .app-tip.from-right.show{ opacity:1; transform:translate(-100%,-50%) translateX(0); }
+    .app-tip.from-bottom{ transform:translate(-50%,0) translateY(6px); }
+    .app-tip.from-bottom.show{ opacity:1; transform:translate(-50%,0) translateY(0); }
 
     
     /* QR: ẩn bộ lọc, hẹn giờ, EV, bão hòa, nhiệt độ */
@@ -427,15 +429,18 @@
     
     #perm-modal{
       display:none;position:fixed;inset:0;z-index:300;
-      background:rgba(0,0,0,.6);align-items:center;justify-content:center;
-      padding:20px;
+      background:rgba(0,0,0,0);align-items:center;justify-content:center;
+      padding:20px;opacity:0;transition:opacity .22s ease, background .22s ease;
     }
-    #perm-modal.show{display:flex}
+    #perm-modal.show{display:flex;opacity:1;background:rgba(0,0,0,.6)}
     .perm-box{
       background:#1c1c1e;border:1px solid rgba(255,255,255,.12);
       border-radius:16px;padding:28px 24px 20px;max-width:320px;width:100%;
       text-align:center;box-shadow:0 16px 48px rgba(0,0,0,.5);
+      transform:scale(.92) translateY(10px);opacity:0;
+      transition:transform .22s ease, opacity .22s ease;
     }
+    #perm-modal.show .perm-box{transform:scale(1) translateY(0);opacity:1}
     .perm-box p{font-size:15px;font-weight:500;margin-bottom:18px;line-height:1.4}
     .perm-box button{
       min-width:100px;padding:10px 20px;border:none;border-radius:12px;
@@ -456,28 +461,63 @@
     
     /* Album button */
     #album-btn{
-      width:44px;height:36px;border-radius:10px;
-      border:2px solid rgba(255,255,255,.75);
-      background:rgba(255,255,255,.1);color:#fff;
+      width:42px;height:42px;border-radius:12px;
+      border:2px solid rgba(255,255,255,.8);
+      background:rgba(255,255,255,.12);color:#fff;
       display:flex;align-items:center;justify-content:center;
-      cursor:pointer;padding:0;flex-shrink:0;
-      box-shadow:0 2px 8px rgba(0,0,0,.25);
+      cursor:pointer;padding:0;flex-shrink:0;overflow:hidden;
+      box-shadow:0 2px 8px rgba(0,0,0,.25);position:relative;
     }
-    #album-btn svg{width:20px;height:20px}
+    #album-btn svg{width:20px;height:20px;position:relative;z-index:1}
+    #album-btn .alb-thumb{
+      position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
+    }
+    #album-btn.has-thumb svg{display:none}
     .recording-active #album-btn{display:none !important}
+    #qr-history-btn{
+      display:none;width:42px;height:42px;border-radius:12px;
+      border:2px solid rgba(255,255,255,.8);
+      background:rgba(255,255,255,.12);color:#fff;
+      align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;
+    }
+    #qr-history-btn svg{width:22px;height:22px}
+    body.mode-qr #album-btn{display:none !important}
+    body.mode-qr #qr-history-btn{display:flex}
+    body.mode-qr.recording-active #qr-history-btn{display:none !important}
+    #qr-hist-modal .lib-modal-box{max-width:400px;max-height:70vh;display:flex;flex-direction:column}
+    #qr-hist-list{overflow:auto;max-height:40vh;margin:8px 0;text-align:left}
+    .qr-hist-item{
+      padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);
+      font-size:13px;
+    }
+    .qr-hist-item .t{color:rgba(255,255,255,.45);font-size:11px;margin-bottom:4px}
+    .qr-hist-item .c{word-break:break-all;color:rgba(255,255,255,.9)}
+    .qr-hist-empty{text-align:center;color:rgba(255,255,255,.45);padding:20px;font-size:13px}
 
     /* Library overlay */
     #library-overlay{
       display:none;position:fixed;inset:0;z-index:280;
       background:#0a0a0a;flex-direction:column;
       color:#fff;font-family:inherit;
+      opacity:0;transform:translateY(12px) scale(.98);
+      transition:opacity .25s ease, transform .25s ease;
     }
-    #library-overlay.show{display:flex}
+    #library-overlay.show{display:flex;opacity:1;transform:translateY(0) scale(1)}
+    #library-overlay.closing{
+      opacity:0;transform:translateY(12px) scale(.98);pointer-events:none;
+    }
+    #library-overlay.show .lib-card{
+      animation:libIn .22s ease both;
+    }
+    @keyframes libIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
     .lib-top{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:14px 16px;gap:12px;flex-shrink:0;
+      display:grid;grid-template-columns:1fr auto 1fr;
+      align-items:center;padding:14px 16px;gap:12px;flex-shrink:0;
+      position:relative;
     }
-    .lib-top-left{display:flex;align-items:center;gap:10px}
+    .lib-top-left{display:flex;align-items:center;gap:10px;justify-self:start}
+    .lib-top .lib-tabs{justify-self:center;grid-column:2}
+    .lib-top .lib-icon-btn{justify-self:end;grid-column:3}
     .lib-back,.lib-icon-btn{
       width:36px;height:36px;border-radius:50%;border:none;
       background:rgba(255,255,255,.1);color:#fff;cursor:pointer;
@@ -487,19 +527,27 @@
     .lib-title{font-size:18px;font-weight:600}
     .lib-tabs{
       display:flex;background:rgba(255,255,255,.1);border-radius:20px;padding:3px;gap:2px;
+      position:relative;
+    }
+    .lib-tab-pill{
+      position:absolute;top:3px;bottom:3px;left:3px;width:64px;height:calc(100% - 6px);
+      background:#fff;border-radius:16px;z-index:0;pointer-events:none;
+      box-shadow:0 1px 4px rgba(0,0,0,.15);
+      transition:left .22s cubic-bezier(.4,0,.2,1), width .22s cubic-bezier(.4,0,.2,1);
     }
     .lib-tab{
       border:none;background:transparent;color:rgba(255,255,255,.7);
       padding:6px 16px;border-radius:16px;font-size:13px;font-weight:500;cursor:pointer;
+      position:relative;z-index:1;transition:color .18s ease;
     }
-    .lib-tab.active{background:#fff;color:#000}
+    .lib-tab.active{color:#000;background:transparent}
     .lib-grid{
       flex:1;overflow:auto;padding:12px 16px 24px;
-      display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
       gap:12px;align-content:start;
     }
     .lib-card{
-      aspect-ratio:16/9;border-radius:14px;overflow:hidden;position:relative;
+      aspect-ratio:16/9;border-radius:16px;overflow:hidden;position:relative;
       background:linear-gradient(145deg,#4a4a4a,#2e2e2e);cursor:pointer;
       border:none;padding:0;color:#fff;
     }
@@ -515,6 +563,34 @@
       display:flex;justify-content:space-between;align-items:center;
       font-size:12px;text-shadow:0 1px 3px rgba(0,0,0,.6);
     }
+    .lib-top-right{display:flex;align-items:center;gap:8px;justify-self:end;grid-column:3}
+    #lib-multi-btn.active{background:#ffaa00;color:#000}
+    #lib-del-sel-btn{
+      display:none;width:36px;height:36px;border-radius:50%;border:none;
+      background:rgba(255,59,48,.25);color:#ff6b63;cursor:pointer;
+      align-items:center;justify-content:center;
+    }
+    #lib-del-sel-btn.show{display:flex}
+    #lib-del-sel-btn svg{width:18px;height:18px}
+    .lib-card .lib-check{
+      display:none;position:absolute;top:8px;right:8px;z-index:2;
+      width:22px;height:22px;border-radius:50%;
+      border:2px solid rgba(255,255,255,.9);
+      background:rgba(0,0,0,.35);
+      box-shadow:0 2px 8px rgba(0,0,0,.35);
+      pointer-events:none;
+    }
+    body.lib-selecting .lib-card .lib-check{display:block}
+    .lib-card.selected .lib-check{
+      background:#ffaa00;border-color:#ffaa00;
+      box-shadow:0 2px 10px rgba(255,170,0,.45);
+    }
+    .lib-card.selected .lib-check::after{
+      content:'';position:absolute;left:6px;top:2px;
+      width:6px;height:11px;border:solid #000;border-width:0 2px 2px 0;
+      transform:rotate(45deg);
+    }
+    body.lib-selecting .lib-card{cursor:pointer}
     .lib-empty{
       grid-column:1/-1;text-align:center;padding:48px 16px;
       color:rgba(255,255,255,.45);font-size:14px;
@@ -524,16 +600,20 @@
     #library-detail{
       display:none;position:fixed;inset:0;z-index:285;
       background:#0a0a0a;flex-direction:column;color:#fff;
+      opacity:0;transform:translateX(16px);
+      transition:opacity .2s ease, transform .2s ease;
     }
-    #library-detail.show{display:flex}
+    #library-detail.show{display:flex;opacity:1;transform:translateX(0)}
     .ld-top{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:12px 14px;gap:10px;flex-shrink:0;
+      display:grid;grid-template-columns:1fr auto 1fr;
+      align-items:center;padding:12px 14px;gap:10px;flex-shrink:0;
     }
+    .ld-top .lib-back{justify-self:start}
     .ld-center{
-      flex:1;display:flex;flex-direction:column;align-items:center;
-      min-width:0;
+      display:flex;flex-direction:column;align-items:center;
+      min-width:0;justify-self:center;grid-column:2;
     }
+    .ld-actions{justify-self:end;grid-column:3}
     .ld-name-pill{
       background:rgba(40,40,42,.95);border-radius:14px;padding:6px 16px;
       text-align:center;max-width:70%;
@@ -565,7 +645,10 @@
     }
     .ld-stage img,.ld-stage video{
       max-width:100%;max-height:100%;object-fit:contain;border-radius:12px;
+      transform-origin:center center;transition:transform .05s linear;
     }
+    .ld-stage{overflow:hidden;cursor:grab}
+    .ld-stage.zooming{cursor:grabbing}
     .ld-film{
       flex-shrink:0;padding:10px 16px 16px;display:flex;gap:8px;
       overflow-x:auto;justify-content:center;
@@ -580,14 +663,18 @@
     /* Info / help / confirm modals */
     .lib-modal{
       display:none;position:fixed;inset:0;z-index:295;
-      background:rgba(0,0,0,.65);align-items:center;justify-content:center;padding:20px;
+      background:rgba(0,0,0,0);align-items:center;justify-content:center;padding:20px;
+      opacity:0;transition:opacity .2s ease, background .2s ease;
     }
-    .lib-modal.show{display:flex}
+    .lib-modal.show{display:flex;opacity:1;background:rgba(0,0,0,.65)}
     .lib-modal-box{
       background:#1c1c1e;border:1px solid rgba(255,255,255,.12);
       border-radius:16px;padding:22px 20px 16px;max-width:360px;width:100%;
       box-shadow:0 16px 48px rgba(0,0,0,.5);
+      transform:scale(.92) translateY(8px);opacity:0;
+      transition:transform .22s ease, opacity .22s ease;
     }
+    .lib-modal.show .lib-modal-box{transform:scale(1) translateY(0);opacity:1}
     .lib-modal-box h3{font-size:16px;margin-bottom:10px;font-weight:600}
     .lib-modal-box p,.lib-modal-box .info-row{
       font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;margin-bottom:8px;
@@ -992,6 +1079,9 @@
     <button type="button" id="album-btn" title="Thư viện">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
     </button>
+    <button type="button" id="qr-history-btn" title="Lịch sử quét" data-tip="Lịch sử quét">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M479.23-140q-120.61 0-212.61-73.62-92-73.61-117.93-188.38-3.23-11.92 3.89-21.92 7.11-10 20.27-11.62 12.15-1.61 21.88 4.85 9.73 6.46 13.58 19Q231.15-319 306.73-259.5t172.5 59.5q117 0 198.5-81.5t81.5-198.5q0-117-81.5-198.5T479.23-760q-65.54 0-122.84 29.12-57.31 29.11-98.7 80.11h74.62q12.77 0 21.38 8.62 8.62 8.61 8.62 21.38t-8.62 21.38q-8.61 8.62-21.38 8.62H195.39q-15.46 0-25.81-10.35-10.35-10.34-10.35-25.81v-136.92q0-12.77 8.62-21.38 8.61-8.62 21.38-8.62t21.39 8.62q8.61 8.61 8.61 21.38v64.77q48.69-57.46 116.62-89.19Q403.77-820 479.23-820q70.77 0 132.62 26.77 61.84 26.77 107.84 72.77t72.77 107.85q26.77 61.84 26.77 132.61 0 70.77-26.77 132.61-26.77 61.85-72.77 107.85-46 46-107.84 72.77Q550-140 479.23-140Zm31.15-352.15 110 110q8.31 8.3 8.5 20.88.2 12.58-8.5 21.27-8.69 8.69-21.07 8.69-12.39 0-21.08-8.69l-117-117q-5.61-5.62-8.23-12.15-2.61-6.54-2.61-13.77V-650q0-12.77 8.61-21.38 8.62-8.62 21.38-8.62 12.77 0 21.39 8.62 8.61 8.61 8.61 21.38v157.85Z"/></svg>
+    </button>
   </div>
 
 
@@ -1000,26 +1090,35 @@
   <div id="library-overlay">
     <div class="lib-top">
       <div class="lib-top-left">
-        <button type="button" class="lib-back" id="lib-back" title="Quay lại">
+        <button type="button" class="lib-back" id="lib-back" title="Quay lại" data-tip="Quay lại">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <span class="lib-title">Thư viện</span>
       </div>
-      <div class="lib-tabs">
+      <div class="lib-tabs" id="lib-tabs">
+        <div class="lib-tab-pill" id="lib-tab-pill"></div>
         <button type="button" class="lib-tab" data-filter="photo">Ảnh</button>
         <button type="button" class="lib-tab active" data-filter="all">Tất cả</button>
         <button type="button" class="lib-tab" data-filter="video">Video</button>
       </div>
-      <button type="button" class="lib-icon-btn" id="lib-help" title="Lưu ý">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      </button>
+      <div class="lib-top-right">
+        <button type="button" class="lib-icon-btn" id="lib-del-sel-btn" title="Xóa đã chọn" data-tip="Xóa đã chọn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+        </button>
+        <button type="button" class="lib-icon-btn" id="lib-multi-btn" title="Chọn nhiều" data-tip="Chọn nhiều">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </button>
+        <button type="button" class="lib-icon-btn" id="lib-help" title="Lưu ý" data-tip="Lưu ý">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
+      </div>
     </div>
     <div class="lib-grid" id="lib-grid"></div>
   </div>
 
   <div id="library-detail">
     <div class="ld-top">
-      <button type="button" class="lib-back" id="ld-back">
+      <button type="button" class="lib-back" id="ld-back" title="Quay lại" data-tip="Quay lại">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <div class="ld-center">
@@ -1029,13 +1128,13 @@
         </div>
       </div>
       <div class="ld-actions">
-        <button type="button" id="ld-info" title="Thông tin">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <button type="button" id="ld-info" title="Thông tin" data-tip="Thông tin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         </button>
-        <button type="button" id="ld-download" title="Tải xuống">
+        <button type="button" id="ld-download" title="Tải xuống" data-tip="Tải xuống">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
         </button>
-        <button type="button" class="danger" id="ld-delete" title="Xóa">
+        <button type="button" class="danger" id="ld-delete" title="Xóa" data-tip="Xóa">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
         </button>
       </div>
@@ -1068,6 +1167,17 @@
       <div id="lib-info-body"></div>
       <div class="lib-modal-actions">
         <button type="button" class="btn-ok" id="lib-info-close">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-modal" id="qr-hist-modal">
+    <div class="lib-modal-box">
+      <h3>Lịch sử quét</h3>
+      <div id="qr-hist-list"></div>
+      <div class="lib-modal-actions">
+        <button type="button" class="btn-danger" id="qr-hist-clear">Xóa tất cả</button>
+        <button type="button" class="btn-ok" id="qr-hist-close">Đóng</button>
       </div>
     </div>
   </div>
@@ -1133,7 +1243,7 @@
               <div class="hint">noiseSuppression + lọc tần số khi quay</div>
             </div>
             <label class="switch">
-              <input type="checkbox" id="set-noise-reduce" checked>
+              <input type="checkbox" id="set-noise-reduce">
               <span class="switch-slider"></span>
             </label>
           </div>
@@ -1143,6 +1253,7 @@
               <div class="hint">Chỉ áp dụng khi quay video</div>
             </div>
             <select id="set-mic-gain">
+              <option value="1" selected>Tắt</option>
               <option value="2">2×</option>
               <option value="5">5×</option>
               <option value="10">10×</option>
@@ -1295,7 +1406,7 @@
   <div id="zoom-label">1x</div>
   <div id="perm-modal">
     <div class="perm-box">
-      <p>Vui lòng cấp quyền trình duyệt</p>
+      <p>Hãy cấp quyền truy cập camera và micro cho trang web này</p>
       <button type="button" id="perm-ok">OK</button>
     </div>
   </div>
@@ -1306,7 +1417,7 @@
 const state = {
   stream:null, mode:'photo', isRecording:false, mediaRecorder:null, recordedChunks:[],
   flipH:false, flipV:false, flashOn:false, flashColor:'#ffffff',
-  timerSec:0, isCounting:false, facingMode:'user', videoDeviceId:null, audioDeviceId:null, forceAspect:'16:9', previewRes:'1280x720', captureRes:'1280x720', previewFps:30, micGain:2, noiseReduce:true, photoFmt:'png', videoFmt:'webm', persistSettings:true,
+  timerSec:0, isCounting:false, facingMode:'user', videoDeviceId:null, audioDeviceId:null, forceAspect:'16:9', previewRes:'1280x720', captureRes:'1280x720', previewFps:30, micGain:1, noiseReduce:false, photoFmt:'png', videoFmt:'webm', persistSettings:true,
   recAnimId:null, qrScanning:false, qrAnimId:null,
   zoom:1, panX:0, panY:0, isPanning:false,
   panStartX:0, panStartY:0, panOriginX:0, panOriginY:0,
@@ -1367,11 +1478,16 @@ function showModeHint(text){
 }
 function showPermModal(){
   const m = document.getElementById('perm-modal');
-  if(m) m.classList.add('show');
+  if(!m) return;
+  m.style.display = 'flex';
+  void m.offsetWidth;
+  m.classList.add('show');
 }
 function hidePermModal(){
   const m = document.getElementById('perm-modal');
-  if(m) m.classList.remove('show');
+  if(!m) return;
+  m.classList.remove('show');
+  setTimeout(()=>{ m.style.display = ''; }, 220);
 }
 document.getElementById('perm-ok')?.addEventListener('click', ()=>{
   hidePermModal();
@@ -1670,7 +1786,7 @@ async function startCamera(withAudio=false){
     }
     let audioConstraint = false;
     if(withAudio){
-      const nr = state.noiseReduce !== false;
+      const nr = state.noiseReduce === true;
       const baseAud = {
         echoCancellation: nr,
         noiseSuppression: nr,
@@ -1755,8 +1871,32 @@ function startFpsCounter(){
 }
 
 /** quality: 'high' = chụp (sharpen SVG), 'fast' = quay (CSS nhẹ, không convolve mỗi frame) */
+function getAspectCrop(vw, vh){
+  let target = 16/9;
+  if(state.forceAspect==='4:3') target = 4/3;
+  else if(state.forceAspect==='1:1') target = 1;
+  const src = vw / Math.max(vh,1);
+  let sx=0, sy=0, sw=vw, sh=vh;
+  if(src > target){
+    sw = vh * target; sx = (vw - sw) / 2;
+  } else {
+    sh = vw / target; sy = (vh - sh) / 2;
+  }
+  return {sx, sy, sw, sh};
+}
+function sizeForAspect(maxW, maxH){
+  let target = 16/9;
+  if(state.forceAspect==='4:3') target = 4/3;
+  else if(state.forceAspect==='1:1') target = 1;
+  let w = maxW, h = Math.round(w / target);
+  if(h > maxH){ h = maxH; w = Math.round(h * target); }
+  return {w, h};
+}
 function drawToCanvas(targetCtx,tw,th,quality){
   const hi = quality !== 'fast';
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if(!vw||!vh) return;
+  const crop = getAspectCrop(vw, vh);
   targetCtx.save();
   targetCtx.imageSmoothingEnabled = true;
   targetCtx.imageSmoothingQuality = hi ? 'high' : 'medium';
@@ -1768,13 +1908,12 @@ function drawToCanvas(targetCtx,tw,th,quality){
   targetCtx.translate(state.panX*scaleX/state.zoom, state.panY*scaleY/state.zoom);
   targetCtx.translate(-cx,-cy);
   let f = video.style.filter || 'none';
-  // feConvolve rất nặng → chỉ khi CHỤP; quay giữ contrast CSS đã có trên video
   if(hi && state.filter === 'sharp'){
     if(f.indexOf('url(#sharpen)') < 0)
       f = (f === 'none' || !f ? '' : f) + ' url(#sharpen)';
   }
   targetCtx.filter = f || 'none';
-  targetCtx.drawImage(video,0,0,tw,th);
+  targetCtx.drawImage(video, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, tw, th);
   targetCtx.filter = 'none';
   targetCtx.restore();
 }
@@ -1816,7 +1955,7 @@ function startQRScan(){
       }
       if(found){
         stopQRScan();
-        qrResult.value=found;qrPopup.classList.add('show');playBeep(1200,.15);
+        qrResult.value=found;qrPopup.classList.add('show');playBeep(1200,.15);saveQrHistory(found);
         return;
       }
     }
@@ -1843,8 +1982,10 @@ async function capturePhoto(){
   try{ await video.play(); }catch(e){}
   const boosted = await boostCaptureResolution();
   if(boosted) await waitForVideoFrame(800);
-  let w=video.videoWidth,h=video.videoHeight;
-  if(!w||!h){ showToast('Camera chưa sẵn sàng'); await restorePreviewResolution(); return; }
+  let vw=video.videoWidth,vh=video.videoHeight;
+  if(!vw||!vh){ showToast('Camera chưa sẵn sàng'); await restorePreviewResolution(); return; }
+  const sz = sizeForAspect(vw, vh);
+  let w=sz.w, h=sz.h;
   canvas.width=w;canvas.height=h;
   let enteredFs = false;
   if(state.flashOn){
@@ -1898,7 +2039,9 @@ function cancelRecDraw(){
 
 async function startRecording(){
   if(!state.stream||state.isRecording||!video.videoWidth) return;
-  const w=video.videoWidth,h=video.videoHeight;
+  const vw0=video.videoWidth,vh0=video.videoHeight;
+  const sz0=sizeForAspect(vw0,vh0);
+  const w=sz0.w,h=sz0.h;
   recCanvas.width=w;recCanvas.height=h;
   // Bật cờ TRƯỚC vòng vẽ — nếu để sau, frame đầu thoát sớm và không bao giờ vẽ lại
   state.isRecording=true;
@@ -1920,38 +2063,42 @@ async function startRecording(){
   const canvasStream=recCanvas.captureStream(recFps);
   const audioTracks=state.stream.getAudioTracks().filter(t=>t.readyState==='live');
   if(audioTracks.length){
-    const gainVal = Math.min(100, Math.max(1, parseFloat(state.micGain) || 2));
-    try{
-      const actx = new (window.AudioContext || window.webkitAudioContext)();
-      if(actx.state === 'suspended') await actx.resume();
-      const src = actx.createMediaStreamSource(new MediaStream([audioTracks[0]]));
-      const gNode = actx.createGain();
-      gNode.gain.setValueAtTime(gainVal, actx.currentTime);
-      const dest = actx.createMediaStreamDestination();
-      let node = src;
-      if(state.noiseReduce !== false){
-        // high-pass ~80Hz + low-pass ~8kHz giảm ù / nhiễu cao
-        const hp = actx.createBiquadFilter();
-        hp.type = 'highpass'; hp.frequency.value = 80; hp.Q.value = 0.7;
-        const lp = actx.createBiquadFilter();
-        lp.type = 'lowpass'; lp.frequency.value = 8000; lp.Q.value = 0.7;
-        node.connect(hp); hp.connect(lp); node = lp;
-      }
-      node.connect(gNode);
-      gNode.connect(dest);
-      const outTrack = dest.stream.getAudioTracks()[0];
-      if(outTrack){
-        outTrack.enabled = true;
-        canvasStream.addTrack(outTrack);
-        state._recAudioCtx = actx;
-        state._recGainNode = gNode;
-      } else {
-        canvasStream.addTrack(audioTracks[0]);
-        try{ actx.close(); }catch(e){}
-      }
-    }catch(e){
-      console.warn('Mic gain fallback', e);
+    const gainVal = Math.min(100, Math.max(1, parseFloat(state.micGain) || 1));
+    const needProcess = gainVal > 1.01 || state.noiseReduce === true;
+    if(!needProcess){
       canvasStream.addTrack(audioTracks[0]);
+    } else {
+      try{
+        const actx = new (window.AudioContext || window.webkitAudioContext)();
+        if(actx.state === 'suspended') await actx.resume();
+        const src = actx.createMediaStreamSource(new MediaStream([audioTracks[0]]));
+        const gNode = actx.createGain();
+        gNode.gain.setValueAtTime(gainVal, actx.currentTime);
+        const dest = actx.createMediaStreamDestination();
+        let node = src;
+        if(state.noiseReduce === true){
+          const hp = actx.createBiquadFilter();
+          hp.type = 'highpass'; hp.frequency.value = 80; hp.Q.value = 0.7;
+          const lp = actx.createBiquadFilter();
+          lp.type = 'lowpass'; lp.frequency.value = 8000; lp.Q.value = 0.7;
+          node.connect(hp); hp.connect(lp); node = lp;
+        }
+        node.connect(gNode);
+        gNode.connect(dest);
+        const outTrack = dest.stream.getAudioTracks()[0];
+        if(outTrack){
+          outTrack.enabled = true;
+          canvasStream.addTrack(outTrack);
+          state._recAudioCtx = actx;
+          state._recGainNode = gNode;
+        } else {
+          canvasStream.addTrack(audioTracks[0]);
+          try{ actx.close(); }catch(e){}
+        }
+      }catch(e){
+        console.warn('Mic gain fallback', e);
+        canvasStream.addTrack(audioTracks[0]);
+      }
     }
   }
   state.recordedChunks=[];
@@ -2467,6 +2614,15 @@ function openSettings(){
     if(setPreviewFps) setPreviewFps.value = String(state.previewFps === 0 ? 0 : (state.previewFps || 30));
   const setFont = document.getElementById('set-font');
   if(setFont) setFont.value = document.documentElement.getAttribute('data-font') || 'system';
+  // Mặc định mở mục Chung
+  document.querySelectorAll('.settings-nav-item').forEach(b=>b.classList.remove('active'));
+  const genNav = document.querySelector('.settings-nav-item[data-panel="general"]');
+  if(genNav) genNav.classList.add('active');
+  document.querySelectorAll('.settings-panel').forEach(p=>p.classList.remove('active'));
+  const genPanel = document.getElementById('panel-general');
+  if(genPanel) genPanel.classList.add('active');
+  const title = document.getElementById('settings-title');
+  if(title) title.textContent = 'Chung';
   try{ video.pause(); }catch(e){}
   settingsOverlay.classList.add('show');
   refreshDeviceLists();
@@ -2548,7 +2704,7 @@ if(setMicGain){
     if(g){ state.micGain = parseFloat(g)||1; setMicGain.value = String(state.micGain); }
   }catch(e){}
   setMicGain.addEventListener('change', ()=>{
-    state.micGain = parseFloat(setMicGain.value)||2;
+    state.micGain = parseFloat(setMicGain.value)||1;
     savePersistedSettings();
     
   });
@@ -2564,16 +2720,17 @@ if(setPersistEl) setPersistEl.addEventListener('change', ()=>{
   
 });
 const btnFactory = document.getElementById('btn-factory-reset');
-if(btnFactory) btnFactory.addEventListener('click', ()=>{
-  if(!confirm('Khôi phục toàn bộ cài đặt về mặc định?')) return;
+if(btnFactory) btnFactory.addEventListener('click', async ()=>{
+  if(!confirm('Khôi phục toàn bộ cài đặt về mặc định?\nẢnh/video trong Thư viện cũng sẽ bị xóa.')) return;
   try{
-    localStorage.removeItem('webcam-font');
-    localStorage.removeItem('webcam-mic-gain');
-    localStorage.removeItem('webcam-photo-fmt');
-    localStorage.removeItem('webcam-video-fmt');
-    localStorage.removeItem(PERSIST_KEY);
-    localStorage.removeItem('webcam-persist-on');
+    localStorage.clear();
     sessionStorage.clear();
+    await new Promise((resolve)=>{
+      const req = indexedDB.deleteDatabase(LIB_DB);
+      req.onsuccess = ()=> resolve();
+      req.onerror = ()=> resolve();
+      req.onblocked = ()=> resolve();
+    });
   }catch(e){}
   location.reload();
 });
@@ -2780,12 +2937,36 @@ function libOpenDb(){
     req.onerror = ()=> reject(req.error);
   });
 }
+
+async function updateAlbumThumb(){
+  const btn = document.getElementById('album-btn');
+  if(!btn) return;
+  try{
+    const all = await libGetAll();
+    const old = btn.querySelector('.alb-thumb');
+    if(old) old.remove();
+    btn.classList.remove('has-thumb');
+    if(!all.length) return;
+    const it = all[0];
+    const url = URL.createObjectURL(it.blob);
+    if(it.type==='photo'){
+      const img = document.createElement('img');
+      img.className = 'alb-thumb'; img.src = url; btn.appendChild(img);
+    } else {
+      const v = document.createElement('video');
+      v.className = 'alb-thumb'; v.src = url; v.muted = true; v.preload='metadata';
+      btn.appendChild(v);
+    }
+    btn.classList.add('has-thumb');
+  }catch(e){}
+}
+
 async function libAddItem(item){
   const db = await libOpenDb();
   return new Promise((resolve, reject)=>{
     const tx = db.transaction(LIB_STORE, 'readwrite');
     tx.objectStore(LIB_STORE).add(item);
-    tx.oncomplete = ()=> resolve();
+    tx.oncomplete = ()=> { updateAlbumThumb(); resolve(); };
     tx.onerror = ()=> reject(tx.error);
   });
 }
@@ -2830,26 +3011,88 @@ function libAspectLabel(w,h){
   if(Math.abs(r-1)<0.08) return '1:1';
   return Math.round(w)+'×'+Math.round(h);
 }
-function pauseCamForLibrary(){
-  try{ video.pause(); }catch(e){}
-  libCamPaused = true;
+function stopLibMediaElements(){
+  document.querySelectorAll('#ld-stage video, #lib-grid video, #ld-film video').forEach(v=>{
+    try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(e){}
+  });
 }
-function resumeCamFromLibrary(){
+function pauseCamForLibrary(){
+  libCamPaused = true;
+  try{ video.pause(); }catch(e){}
+  // Tắt track cam+mic để hết lag (không stop hẳn để mở lại nhanh)
+  try{
+    state.stream?.getTracks()?.forEach(t=>{ t.enabled = false; });
+  }catch(e){}
+  try{ stopMicMeter(); }catch(e){}
+  state._fpsRunning = false;
+}
+async function resumeCamFromLibrary(){
   if(!libCamPaused) return;
   libCamPaused = false;
-  try{ video.play(); }catch(e){}
+  try{
+    state.stream?.getTracks()?.forEach(t=>{ t.enabled = true; });
+  }catch(e){}
+  try{ await video.play(); }catch(e){}
+  startFpsCounter();
+  if(state.mode==='video') startMicMeter();
 }
 async function openLibrary(){
   closeAllMenus();
   pauseCamForLibrary();
-  document.getElementById('library-overlay').classList.add('show');
+  exitLibSelectMode();
+  const ov = document.getElementById('library-overlay');
+  ov.classList.remove('closing');
+  ov.style.display = 'flex';
+  void ov.offsetWidth;
+  ov.classList.add('show');
   document.getElementById('library-detail').classList.remove('show');
+  // Giống người: vào Ảnh trước → rồi Tất cả (có pill trượt)
+  function setLibTab(filter){
+    libFilter = filter;
+    document.querySelectorAll('.lib-tab').forEach(t=>t.classList.remove('active'));
+    const tab = document.querySelector('.lib-tab[data-filter="'+filter+'"]');
+    if(tab) tab.classList.add('active');
+    updateLibTabPill();
+  }
+  setLibTab('photo');
   await renderLibGrid();
+  updateAlbumThumb();
+  requestAnimationFrame(updateLibTabPill);
+  setTimeout(async ()=>{
+    setLibTab('all');
+    await renderLibGrid();
+    requestAnimationFrame(updateLibTabPill);
+  }, 380);
 }
 function closeLibrary(){
-  document.getElementById('library-overlay').classList.remove('show');
-  document.getElementById('library-detail').classList.remove('show');
-  resumeCamFromLibrary();
+  stopLibMediaElements();
+  exitLibSelectMode();
+  const ov = document.getElementById('library-overlay');
+  const det = document.getElementById('library-detail');
+  det.classList.remove('show');
+  if(!ov) return;
+  ov.classList.add('closing');
+  setTimeout(()=>{
+    ov.classList.remove('show','closing');
+    ov.style.display = '';
+    resumeCamFromLibrary();
+  }, 240);
+}
+let libSelecting = false;
+const libSelected = new Set();
+function updateLibDelBtn(){
+  const b = document.getElementById('lib-del-sel-btn');
+  if(!b) return;
+  if(libSelecting && libSelected.size > 0) b.classList.add('show');
+  else b.classList.remove('show');
+}
+function exitLibSelectMode(){
+  libSelecting = false;
+  libSelected.clear();
+  document.body.classList.remove('lib-selecting');
+  document.getElementById('lib-multi-btn')?.classList.remove('active');
+  document.querySelectorAll('.lib-card.selected').forEach(c=>c.classList.remove('selected'));
+  updateLibDelBtn();
 }
 async function renderLibGrid(){
   const grid = document.getElementById('lib-grid');
@@ -2862,14 +3105,19 @@ async function renderLibGrid(){
   });
   grid.innerHTML = '';
   if(!list.length){
-    grid.innerHTML = '<div class="lib-empty">Chưa có ảnh hoặc video</div>';
+    grid.innerHTML = '<div class="lib-empty">Chưa có tệp =))</div>';
+    updateLibDelBtn();
     return;
   }
   list.forEach((it)=>{
     const realIdx = libItems.indexOf(it);
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'lib-card';
+    btn.className = 'lib-card' + (libSelected.has(it.id) ? ' selected' : '');
+    btn.dataset.id = it.id;
+    const check = document.createElement('span');
+    check.className = 'lib-check';
+    btn.appendChild(check);
     const url = URL.createObjectURL(it.blob);
     const asp = libAspectLabel(it.width, it.height);
     if(it.type==='photo'){
@@ -2891,9 +3139,19 @@ async function renderLibGrid(){
       meta.innerHTML = '<span>▶</span><span>'+libFmtDur(it.duration)+'</span>';
       btn.appendChild(meta);
     }
-    btn.addEventListener('click', ()=> openLibDetail(realIdx));
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      if(libSelecting){
+        if(libSelected.has(it.id)){ libSelected.delete(it.id); btn.classList.remove('selected'); }
+        else { libSelected.add(it.id); btn.classList.add('selected'); }
+        updateLibDelBtn();
+        return;
+      }
+      openLibDetail(realIdx);
+    });
     grid.appendChild(btn);
   });
+  updateLibDelBtn();
 }
 function openLibDetail(idx){
   if(idx<0||idx>=libItems.length) return;
@@ -2901,9 +3159,12 @@ function openLibDetail(idx){
   document.getElementById('library-detail').classList.add('show');
   renderLibDetail();
 }
+let libViewZoom = 1;
 function renderLibDetail(){
+  stopLibMediaElements();
   const it = libItems[libDetailIdx];
   if(!it) return;
+  libViewZoom = 1;
   document.getElementById('ld-name').textContent = it.name || (it.type==='photo'?'Ảnh':'Video');
   document.getElementById('ld-date').textContent = libFmtDate(it.createdAt);
   const stage = document.getElementById('ld-stage');
@@ -2911,10 +3172,13 @@ function renderLibDetail(){
   const url = URL.createObjectURL(it.blob);
   if(it.type==='photo'){
     const img = document.createElement('img');
-    img.src = url; stage.appendChild(img);
+    img.src = url; img.style.transform = 'scale(1)'; stage.appendChild(img);
   } else {
     const v = document.createElement('video');
     v.src = url; v.controls = true; v.playsInline = true;
+    v.disablePictureInPicture = true;
+    v.setAttribute('controlsList', 'nodownload noplaybackrate noremoteplayback');
+    v.style.transform = 'scale(1)';
     stage.appendChild(v);
   }
   document.getElementById('ld-prev').disabled = libDetailIdx <= 0;
@@ -2948,27 +3212,78 @@ function showLibInfo(){
   html += '<div class="info-row"><span>Định dạng: </span>'+ext.toUpperCase()+'</div>';
   html += '<div class="info-row"><span>Độ phân giải: </span>'+(it.width&&it.height? (it.width+'×'+it.height):'—')+'</div>';
   body.innerHTML = html;
-  document.getElementById('lib-info-modal').classList.add('show');
+  const im = document.getElementById('lib-info-modal');
+  im.style.display = 'flex'; void im.offsetWidth; im.classList.add('show');
 }
 
 document.getElementById('album-btn')?.addEventListener('click', e=>{ e.stopPropagation(); openLibrary(); });
+
+document.getElementById('lib-multi-btn')?.addEventListener('click', e=>{
+  e.stopPropagation();
+  libSelecting = !libSelecting;
+  const btn = document.getElementById('lib-multi-btn');
+  if(libSelecting){
+    btn?.classList.add('active');
+    document.body.classList.add('lib-selecting');
+  } else {
+    exitLibSelectMode();
+  }
+  updateLibDelBtn();
+});
+document.getElementById('lib-del-sel-btn')?.addEventListener('click', async e=>{
+  e.stopPropagation();
+  if(!libSelected.size) return;
+  if(!confirm('Xóa vĩnh viễn '+libSelected.size+' mục đã chọn?')) return;
+  const ids = [...libSelected];
+  for(const id of ids){ await libDelete(id); }
+  libSelected.clear();
+  await renderLibGrid();
+  updateAlbumThumb();
+  updateLibDelBtn();
+});
+
 document.getElementById('lib-back')?.addEventListener('click', closeLibrary);
 document.getElementById('ld-back')?.addEventListener('click', ()=>{
+  stopLibMediaElements();
   document.getElementById('library-detail').classList.remove('show');
   renderLibGrid();
 });
+function updateLibTabPill(){
+  const pill = document.getElementById('lib-tab-pill');
+  const tabs = document.getElementById('lib-tabs');
+  const active = document.querySelector('.lib-tab.active');
+  if(!pill||!tabs||!active) return;
+  const tr = tabs.getBoundingClientRect();
+  const ar = active.getBoundingClientRect();
+  pill.style.width = ar.width + 'px';
+  pill.style.left = (ar.left - tr.left) + 'px';
+}
 document.querySelectorAll('.lib-tab').forEach(tab=>{
   tab.addEventListener('click', ()=>{
     document.querySelectorAll('.lib-tab').forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
     libFilter = tab.dataset.filter || 'all';
+    updateLibTabPill();
     renderLibGrid();
   });
 });
-document.getElementById('lib-help')?.addEventListener('click', ()=> document.getElementById('lib-help-modal').classList.add('show'));
-document.getElementById('lib-help-close')?.addEventListener('click', ()=> document.getElementById('lib-help-modal').classList.remove('show'));
-document.getElementById('lib-info')?.addEventListener('click', showLibInfo);
-document.getElementById('lib-info-close')?.addEventListener('click', ()=> document.getElementById('lib-info-modal').classList.remove('show'));
+requestAnimationFrame(updateLibTabPill);
+window.addEventListener('resize', updateLibTabPill);
+document.getElementById('lib-help')?.addEventListener('click', ()=>{
+  const m = document.getElementById('lib-help-modal');
+  m.style.display = 'flex'; void m.offsetWidth; m.classList.add('show');
+});
+document.getElementById('lib-help-close')?.addEventListener('click', ()=>{
+  const m = document.getElementById('lib-help-modal');
+  m.classList.remove('show');
+  setTimeout(()=>{ m.style.display = ''; }, 200);
+});
+document.getElementById('ld-info')?.addEventListener('click', e=>{ e.stopPropagation(); showLibInfo(); });
+document.getElementById('lib-info-close')?.addEventListener('click', ()=>{
+  const m = document.getElementById('lib-info-modal');
+  m.classList.remove('show');
+  setTimeout(()=>{ m.style.display = ''; }, 200);
+});
 document.getElementById('ld-download')?.addEventListener('click', ()=>{
   const it = libItems[libDetailIdx];
   if(!it) return;
@@ -3010,14 +3325,106 @@ document.getElementById('ld-next')?.addEventListener('click', ()=>{
   if(!el) return;
   try{
     const v = localStorage.getItem('webcam-noise-reduce');
-    if(v==='0'){ state.noiseReduce=false; el.checked=false; }
-    else { state.noiseReduce=true; el.checked=true; }
+    if(v==='1'){ state.noiseReduce=true; el.checked=true; }
+    else { state.noiseReduce=false; el.checked=false; }
   }catch(e){}
   el.addEventListener('change', ()=>{
     state.noiseReduce = !!el.checked;
     try{ localStorage.setItem('webcam-noise-reduce', state.noiseReduce?'1':'0'); }catch(e){}
   });
 })();
+
+
+/* Zoom cuộn chuột khi xem thư viện */
+(function(){
+  const stage = document.getElementById('ld-stage');
+  if(!stage) return;
+  stage.addEventListener('wheel', e=>{
+    if(!document.getElementById('library-detail')?.classList.contains('show')) return;
+    e.preventDefault();
+    const media = stage.querySelector('img,video');
+    if(!media) return;
+    libViewZoom = Math.min(5, Math.max(1, libViewZoom + (e.deltaY < 0 ? 0.15 : -0.15)));
+    media.style.transform = 'scale('+libViewZoom+')';
+  }, {passive:false});
+})();
+
+/* Tooltip phía dưới cho nút thư viện */
+(function(){
+  const tip = document.querySelector('.app-tip') || (function(){
+    const t=document.createElement('div'); t.className='app-tip from-left'; document.body.appendChild(t); return t;
+  })();
+  function bindBelow(el){
+    if(!el) return;
+    const text = el.getAttribute('data-tip') || el.getAttribute('title');
+    if(!text) return;
+    el.removeAttribute('title');
+    el.addEventListener('mouseenter', ()=>{
+      const r = el.getBoundingClientRect();
+      tip.textContent = text;
+      tip.classList.remove('show','from-left','from-right','from-bottom');
+      tip.style.left = (r.left + r.width/2) + 'px';
+      tip.style.top = (r.bottom + 8) + 'px';
+      tip.style.transform = '';
+      tip.classList.add('from-bottom');
+      requestAnimationFrame(()=> tip.classList.add('show'));
+    });
+    el.addEventListener('mouseleave', ()=>{ tip.classList.remove('show'); });
+  }
+  ['lib-back','lib-help','ld-back','ld-info','ld-download','ld-delete','qr-history-btn','lib-multi-btn','lib-del-sel-btn'].forEach(id=>bindBelow(document.getElementById(id)));
+})();
+
+updateAlbumThumb();
+
+
+/* QR scan history */
+const QR_HIST_KEY = 'webcam-qr-history';
+function loadQrHistory(){
+  try{ return JSON.parse(localStorage.getItem(QR_HIST_KEY)||'[]'); }catch(e){ return []; }
+}
+function saveQrHistory(text){
+  if(!text) return;
+  try{
+    const list = loadQrHistory();
+    list.unshift({ text: String(text), at: Date.now() });
+    localStorage.setItem(QR_HIST_KEY, JSON.stringify(list.slice(0, 100)));
+  }catch(e){}
+}
+function renderQrHistory(){
+  const box = document.getElementById('qr-hist-list');
+  if(!box) return;
+  const list = loadQrHistory();
+  if(!list.length){
+    box.innerHTML = '<div class="qr-hist-empty">Chưa có lịch sử quét</div>';
+    return;
+  }
+  box.innerHTML = list.map(it=>{
+    const d = new Date(it.at);
+    const pad = n=>String(n).padStart(2,'0');
+    const t = pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+    return '<div class="qr-hist-item"><div class="t">'+t+'</div><div class="c"></div></div>';
+  }).join('');
+  [...box.querySelectorAll('.qr-hist-item .c')].forEach((el,i)=>{
+    el.textContent = list[i].text;
+  });
+}
+function openQrHistory(){
+  const m = document.getElementById('qr-hist-modal');
+  renderQrHistory();
+  m.style.display = 'flex'; void m.offsetWidth; m.classList.add('show');
+}
+function closeQrHistory(){
+  const m = document.getElementById('qr-hist-modal');
+  m.classList.remove('show');
+  setTimeout(()=>{ m.style.display=''; }, 200);
+}
+document.getElementById('qr-history-btn')?.addEventListener('click', e=>{ e.stopPropagation(); openQrHistory(); });
+document.getElementById('qr-hist-close')?.addEventListener('click', closeQrHistory);
+document.getElementById('qr-hist-clear')?.addEventListener('click', ()=>{
+  if(!confirm('Xóa toàn bộ lịch sử quét?')) return;
+  try{ localStorage.removeItem(QR_HIST_KEY); }catch(e){}
+  renderQrHistory();
+});
 
 </script>
 </body>
