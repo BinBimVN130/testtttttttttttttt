@@ -901,14 +901,21 @@
     .flip-btn.active{background:#ffaa00;color:#000}
 
     #qr-popup{
-      position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;
+      position:fixed;inset:0;background:rgba(0,0,0,0);display:none;
       align-items:center;justify-content:center;z-index:250;padding:20px;
+      opacity:0;transition:opacity .22s ease, background .22s ease;
     }
-    #qr-popup.show{display:flex}
-    .qr-box{background:rgba(30,30,32,.92);border-radius:16px;width:100%;max-width:360px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.14)}
+    #qr-popup.show{display:flex;opacity:1;background:rgba(0,0,0,.7)}
+    .qr-box{
+      background:rgba(30,30,32,.95);border-radius:16px;width:100%;max-width:400px;padding:24px;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.14);
+      transform:scale(.92) translateY(10px);opacity:0;
+      transition:transform .22s ease, opacity .22s ease;
+    }
+    #qr-popup.show .qr-box{transform:scale(1) translateY(0);opacity:1}
     .qr-box h3{font-size:17px;font-weight:600;margin-bottom:12px}
     .qr-box textarea{
-      width:100%;min-height:110px;background:#2c2c2e;border:none;border-radius:10px;color:#fff;
+      width:100%;min-height:150px;background:#2c2c2e;border:none;border-radius:10px;color:#fff;
       padding:12px;font-size:14px;resize:none;outline:none;margin-bottom:14px;font-family:inherit;line-height:1.45;
     }
     .qr-actions{display:flex;gap:10px}
@@ -1341,6 +1348,12 @@
               <option value="20">20×</option>
               <option value="50">50×</option>
             </select>
+          </div>
+          <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:10px">
+            <div class="lab">Đo mức micro</div>
+            <div id="settings-mic-meter" style="width:100%;height:14px;border-radius:7px;background:rgba(255,255,255,.1);overflow:hidden">
+              <div id="settings-mic-bar" style="height:100%;width:0%;border-radius:7px;background:#34c759;transition:width .08s linear"></div>
+            </div>
           </div>
         </div>
         <div class="settings-panel" id="panel-devices">
@@ -2011,48 +2024,53 @@ function startQRScan(){
   // Tái sử dụng canvas nhỏ — không tạo mới mỗi frame
   if(!state._qrCanvas){ state._qrCanvas = document.createElement('canvas'); state._qrCtx = state._qrCanvas.getContext('2d',{willReadFrequently:true}); }
   let lastScan = 0;
-  const SCAN_MS = 180; // ~5–6 lần/giây, đủ QR, nhẹ CPU
+  const SCAN_MS = 320; // ~3 lần/giây — nhẹ máy
+  let busy = false;
   const loop=async()=>{
     if(!state.qrScanning||state.mode!=='qr') return;
     const now = performance.now();
-    if(video.readyState>=2 && now - lastScan >= SCAN_MS){
+    if(!busy && video.readyState>=2 && now - lastScan >= SCAN_MS){
       lastScan = now;
-      const w=video.videoWidth,h=video.videoHeight;
-      // Chỉ scale nhỏ để quét — không full-res
-      const scale = Math.min(0.45, 480/Math.max(w,1));
-      const tw=Math.max(160,Math.floor(w*scale)), th=Math.max(160,Math.floor(h*scale));
-      const qc = state._qrCanvas, qx = state._qrCtx;
-      if(qc.width!==tw||qc.height!==th){ qc.width=tw; qc.height=th; }
-      qx.drawImage(video,0,0,tw,th);
-      let found=null;
-      if('BarcodeDetector' in window){
-        try{
-          if(!state._qrDet) state._qrDet = new BarcodeDetector({formats:['qr_code']});
-          const bmp=await createImageBitmap(qc);
-          const codes=await state._qrDet.detect(bmp);bmp.close();
-          if(codes?.length&&codes[0].rawValue) found=codes[0].rawValue;
-        }catch(e){}
-      }
-      if(!found && typeof jsQR === 'function'){
-        try{
-          const img=qx.getImageData(0,0,tw,th);
-          const code=jsQR(img.data,tw,th,{inversionAttempts:'dontInvert'});
-          if(code?.data) found=code.data;
-        }catch(e){}
-      }
-      if(found){
-        stopQRScan();
-        qrResult.value=found;qrPopup.classList.add('show');playBeep(1200,.15);saveQrHistory(found);
-        return;
-      }
+      busy = true;
+      try{
+        const w=video.videoWidth,h=video.videoHeight;
+        const scale = Math.min(0.35, 320/Math.max(w,1));
+        const tw=Math.max(140,Math.floor(w*scale)), th=Math.max(140,Math.floor(h*scale));
+        const qc = state._qrCanvas, qx = state._qrCtx;
+        if(qc.width!==tw||qc.height!==th){ qc.width=tw; qc.height=th; }
+        qx.drawImage(video,0,0,tw,th);
+        let found=null;
+        if('BarcodeDetector' in window){
+          try{
+            if(!state._qrDet) state._qrDet = new BarcodeDetector({formats:['qr_code']});
+            const codes=await state._qrDet.detect(qc);
+            if(codes?.length&&codes[0].rawValue) found=codes[0].rawValue;
+          }catch(e){}
+        }
+        if(!found && typeof jsQR === 'function'){
+          try{
+            const img=qx.getImageData(0,0,tw,th);
+            const code=jsQR(img.data,tw,th,{inversionAttempts:'dontInvert'});
+            if(code?.data) found=code.data;
+          }catch(e){}
+        }
+        if(found){
+          stopQRScan();
+          qrResult.value=found;
+          qrPopup.style.display='flex'; void qrPopup.offsetWidth; qrPopup.classList.add('show');
+          playBeep(1200,.15);saveQrHistory(found);
+          busy = false;
+          return;
+        }
+      }finally{ busy = false; }
     }
-    state.qrAnimId=requestAnimationFrame(loop);
+    state.qrAnimId = setTimeout(loop, SCAN_MS);
   };
   loop();
 }
 function stopQRScan(){
   state.qrScanning=false;
-  if(state.qrAnimId) cancelAnimationFrame(state.qrAnimId);
+  if(state.qrAnimId){ clearTimeout(state.qrAnimId); try{cancelAnimationFrame(state.qrAnimId)}catch(e){} }
   state.qrAnimId=null;
 }
 
@@ -2134,11 +2152,17 @@ async function startRecording(){
   state.isRecording=true;
   const recFps = (state.previewFps > 0) ? state.previewFps : 30;
   const useRvfc = typeof video.requestVideoFrameCallback === 'function';
-  const drawLoop = () => {
+  let lastDraw = 0;
+  const minGap = 1000 / Math.max(15, Math.min(recFps, 30));
+  const drawLoop = (now) => {
     if(!state.isRecording) return;
-    try{ drawToCanvas(recCtx,w,h,'fast'); }catch(e){}
+    const t = (typeof now === 'number') ? now : performance.now();
+    if(t - lastDraw >= minGap - 1){
+      lastDraw = t;
+      try{ drawToCanvas(recCtx,w,h,'fast'); }catch(e){}
+    }
     if(useRvfc){
-      state.recAnimId = video.requestVideoFrameCallback(drawLoop);
+      state.recAnimId = video.requestVideoFrameCallback((_n, meta)=> drawLoop(meta?.expectedDisplayTime || performance.now()));
     } else {
       state.recAnimId = requestAnimationFrame(drawLoop);
     }
@@ -2624,6 +2648,7 @@ if(fsBtn){
 
 document.getElementById('qr-close').addEventListener('click',()=>{
   qrPopup.classList.remove('show');
+  setTimeout(()=>{ qrPopup.style.display=''; }, 220);
   if(state.mode==='qr') startQRScan();
 });
 document.getElementById('qr-copy').addEventListener('click',async()=>{
@@ -2695,6 +2720,56 @@ function applyFont(id){
   document.documentElement.setAttribute('data-font', v);
   try{ localStorage.setItem('webcam-font', v); }catch(e){}
 }
+
+/* Settings mic meter */
+let settingsMicRaf = null;
+function startSettingsMicMeter(){
+  stopSettingsMicMeter();
+  const bar = document.getElementById('settings-mic-bar');
+  if(!bar) return;
+  const track = state.stream?.getAudioTracks()?.find(t=>t.readyState==='live');
+  if(!track){
+    // xin mic tạm nếu chưa có
+    navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(s=>{
+      state._settingsMicStream = s;
+      runSettingsMic(s, bar);
+    }).catch(()=>{});
+    return;
+  }
+  runSettingsMic(new MediaStream([track]), bar);
+}
+function runSettingsMic(stream, bar){
+  try{
+    const actx = new (window.AudioContext||window.webkitAudioContext)();
+    const src = actx.createMediaStreamSource(stream);
+    const an = actx.createAnalyser(); an.fftSize = 128;
+    src.connect(an);
+    state._settingsMicCtx = actx;
+    const data = new Uint8Array(an.fftSize);
+    let smooth = 0;
+    const loop = ()=>{
+      if(!state._settingsMicCtx) return;
+      an.getByteTimeDomainData(data);
+      let sum=0;
+      for(let i=0;i<data.length;i++){ const v=(data[i]-128)/128; sum+=v*v; }
+      const rms = Math.sqrt(sum/data.length);
+      const level = Math.min(1, rms * 4 * (state.micGain||1));
+      smooth = smooth*0.7 + level*0.3;
+      bar.style.width = (smooth*100)+'%';
+      bar.style.background = smooth<0.4?'#34c759':(smooth<0.72?'#ff9500':'#ff3b30');
+      settingsMicRaf = setTimeout(loop, 80);
+    };
+    loop();
+  }catch(e){}
+}
+function stopSettingsMicMeter(){
+  if(settingsMicRaf){ clearTimeout(settingsMicRaf); settingsMicRaf=null; }
+  try{ state._settingsMicCtx?.close(); }catch(e){}
+  state._settingsMicCtx = null;
+  try{ state._settingsMicStream?.getTracks()?.forEach(t=>t.stop()); }catch(e){}
+  state._settingsMicStream = null;
+}
+
 function openSettings(){
   closeAllMenus();
   if(setPreviewRes) setPreviewRes.value = state.previewRes || '1280x720';
@@ -2712,9 +2787,15 @@ function openSettings(){
   if(title) title.textContent = 'Chung';
   settingsOverlay.classList.add('show');
   refreshDeviceLists();
+  // mic meter nếu đang ở panel micro hoặc luôn sẵn
+  setTimeout(()=>{
+    const micro = document.getElementById('panel-micro');
+    if(micro?.classList.contains('active')) startSettingsMicMeter();
+  }, 100);
 }
 function closeSettings(){
   settingsOverlay.classList.remove('show');
+  stopSettingsMicMeter();
 }
 if(settingsBtn) settingsBtn.addEventListener('click', e=>{ e.stopPropagation(); openSettings(); });
 
@@ -2728,6 +2809,8 @@ document.querySelectorAll('.settings-nav-item[data-panel]').forEach(btn=>{
     if(panel) panel.classList.add('active');
     const title = document.getElementById('settings-title');
     if(title) title.textContent = ({general:'Chung',micro:'Mic',devices:'Thiết bị',camera:'Camera',about:'Giới thiệu'})[id] || 'Camera';
+    if(id==='micro') startSettingsMicMeter();
+    else stopSettingsMicMeter();
   });
 });
 
@@ -2896,44 +2979,73 @@ async function restorePreviewResolution(){
 }
 
 
-/* Tooltip: trái→hiện phải, phải→hiện trái; trượt */
+/* ===== Tooltip unified (event delegation) ===== */
 (function(){
+  document.querySelectorAll('.app-tip').forEach(t=>t.remove());
   const tip = document.createElement('div');
-  tip.className = 'app-tip from-left';
+  tip.className = 'app-tip';
+  tip.id = 'app-tip';
   document.body.appendChild(tip);
   let hideT = null;
+  let curEl = null;
   function hideTip(){
     tip.classList.remove('show');
+    curEl = null;
   }
-  function bindTip(el){
-    const text = el.getAttribute('title') || el.getAttribute('data-tip');
+  function tipText(el){
+    return el.getAttribute('data-tip') || el.getAttribute('title') || '';
+  }
+  function showFor(el){
+    const text = tipText(el);
     if(!text) return;
-    el.setAttribute('data-tip', text);
-    el.removeAttribute('title');
-    el.addEventListener('mouseenter', ()=>{
-      clearTimeout(hideT);
-      const r = el.getBoundingClientRect();
-      const inLeft = !!el.closest('.left-controls');
-      const inRight = !!el.closest('.right-controls');
-      tip.textContent = text;
-      tip.classList.remove('show','from-left','from-right');
-      const gap = 10;
-      if(inRight){
-        tip.classList.add('from-right');
-        tip.style.left = (r.left - gap) + 'px';
-        tip.style.top = (r.top + r.height/2) + 'px';
+    clearTimeout(hideT);
+    curEl = el;
+    const r = el.getBoundingClientRect();
+    tip.textContent = text;
+    tip.classList.remove('show','dir-left','dir-right','dir-down','dir-up');
+    const inLib = !!(el.closest('#library-overlay') || el.closest('#library-detail') || el.closest('.lib-modal'));
+    const inRight = !!el.closest('.right-controls');
+    const inLeft = !!el.closest('.left-controls');
+    const gap = 10;
+    if(inLib){
+      if(r.top < window.innerHeight * 0.55){
+        tip.style.left = (r.left + r.width/2) + 'px';
+        tip.style.top = (r.bottom + gap) + 'px';
+        tip.classList.add('dir-down');
       } else {
-        // mặc định / cột trái: hiện bên phải nút
-        tip.classList.add('from-left');
-        tip.style.left = (r.right + gap) + 'px';
-        tip.style.top = (r.top + r.height/2) + 'px';
+        tip.style.left = (r.left + r.width/2) + 'px';
+        tip.style.top = r.top + 'px';
+        tip.classList.add('dir-up');
       }
-      requestAnimationFrame(()=> tip.classList.add('show'));
-    });
-    el.addEventListener('mouseleave', ()=>{ hideT = setTimeout(hideTip, 50); });
+    } else if(inRight){
+      tip.style.left = (r.left - gap) + 'px';
+      tip.style.top = (r.top + r.height/2) + 'px';
+      tip.classList.add('dir-left');
+    } else {
+      tip.style.left = (r.right + gap) + 'px';
+      tip.style.top = (r.top + r.height/2) + 'px';
+      tip.classList.add('dir-right');
+    }
+    requestAnimationFrame(()=> tip.classList.add('show'));
   }
-  document.querySelectorAll('[title], [data-tip]').forEach(bindTip);
-  window.__bindTip = bindTip;
+  document.addEventListener('mouseover', e=>{
+    const el = e.target.closest('[data-tip], [title]');
+    if(!el || el === tip) return;
+    // bỏ title native
+    if(el.hasAttribute('title') && !el.getAttribute('data-tip')){
+      el.setAttribute('data-tip', el.getAttribute('title'));
+      el.removeAttribute('title');
+    }
+    if(el !== curEl) showFor(el);
+  }, true);
+  document.addEventListener('mouseout', e=>{
+    const el = e.target.closest('[data-tip]');
+    if(!el) return;
+    const to = e.relatedTarget;
+    if(to && el.contains(to)) return;
+    hideT = setTimeout(hideTip, 60);
+  }, true);
+  document.addEventListener('click', ()=> hideTip(), true);
 })();
 
 /* Mode pill trượt */
@@ -3114,23 +3226,24 @@ function stopLibMediaElements(){
 }
 function pauseCamForLibrary(){
   libCamPaused = true;
-  try{ video.pause(); }catch(e){}
-  // Tắt track cam+mic để hết lag (không stop hẳn để mở lại nhanh)
-  try{
-    state.stream?.getTracks()?.forEach(t=>{ t.enabled = false; });
-  }catch(e){}
+  try{ stopQRScan(); }catch(e){}
   try{ stopMicMeter(); }catch(e){}
   state._fpsRunning = false;
+  try{ video.pause(); }catch(e){}
+  try{
+    if(state.stream){
+      state.stream.getTracks().forEach(t=>{ try{ t.stop(); }catch(e){} });
+      state.stream = null;
+    }
+  }catch(e){}
+  try{ video.srcObject = null; }catch(e){}
 }
 async function resumeCamFromLibrary(){
   if(!libCamPaused) return;
   libCamPaused = false;
   try{
-    state.stream?.getTracks()?.forEach(t=>{ t.enabled = true; });
-  }catch(e){}
-  try{ await video.play(); }catch(e){}
-  startFpsCounter();
-  if(state.mode==='video') startMicMeter();
+    await startCamera(state.mode === 'video');
+  }catch(e){ console.warn(e); }
 }
 async function openLibrary(){
   try{
@@ -3347,29 +3460,11 @@ function applyLibGridSize(size){
 }
 document.getElementById('lib-layout-btn')?.addEventListener('click', e=>{
   e.stopPropagation();
-  const menu = document.getElementById('lib-layout-menu');
-  const btn = document.getElementById('lib-layout-btn');
-  const willShow = !menu?.classList.contains('show');
-  if(willShow){
-    menu.style.display = 'flex';
-    void menu.offsetWidth;
-    menu.classList.add('show');
-    btn?.classList.add('active');
-  } else {
-    menu.classList.remove('show');
-    btn?.classList.remove('active');
-    setTimeout(()=>{ menu.style.display = ''; }, 180);
-  }
-});
-document.querySelectorAll('#lib-layout-menu button').forEach(b=>{
-  b.addEventListener('click', e=>{
-    e.stopPropagation();
-    applyLibGridSize(b.dataset.size);
-    const menu = document.getElementById('lib-layout-menu');
-    menu?.classList.remove('show');
-    document.getElementById('lib-layout-btn')?.classList.remove('active');
-    setTimeout(()=>{ if(menu) menu.style.display = ''; }, 180);
-  });
+  const order = ['sm','md','lg'];
+  const labels = {sm:'Nhỏ', md:'Trung bình', lg:'Lớn'};
+  const i = (order.indexOf(libGridSize) + 1) % order.length;
+  applyLibGridSize(order[i]);
+  showToast('Bố cục: ' + labels[order[i]]);
 });
 document.addEventListener('click', ()=>{
   const menu = document.getElementById('lib-layout-menu');
@@ -3525,39 +3620,7 @@ document.getElementById('ld-next')?.addEventListener('click', ()=>{
   }, {passive:false});
 })();
 
-/* Tooltip phía dưới cho nút thư viện */
-(function(){
-  const tip = document.querySelector('.app-tip') || (function(){
-    const t=document.createElement('div'); t.className='app-tip from-left'; document.body.appendChild(t); return t;
-  })();
-  function bindLibTip(el){
-    if(!el) return;
-    const text = el.getAttribute('data-tip') || el.getAttribute('title');
-    if(!text) return;
-    el.removeAttribute('title');
-    el.addEventListener('mouseenter', ()=>{
-      const r = el.getBoundingClientRect();
-      tip.textContent = text;
-      tip.classList.remove('show','from-left','from-right','from-bottom','from-top','from-up');
-      tip.style.transform = '';
-      const midY = window.innerHeight / 2;
-      if(r.top < midY){
-        // nút trên → tip trượt xuống (dưới nút)
-        tip.style.left = (r.left + r.width/2) + 'px';
-        tip.style.top = (r.bottom + 8) + 'px';
-        tip.classList.add('from-top');
-      } else {
-        // nút dưới → tip trượt lên (trên nút)
-        tip.style.left = (r.left + r.width/2) + 'px';
-        tip.style.top = r.top + 'px';
-        tip.classList.add('from-up');
-      }
-      requestAnimationFrame(()=> tip.classList.add('show'));
-    });
-    el.addEventListener('mouseleave', ()=>{ tip.classList.remove('show'); });
-  }
-  ['lib-back','lib-help','ld-back','ld-info','ld-download','ld-delete','qr-history-btn','lib-multi-btn','lib-del-sel-btn','lib-layout-btn','ld-prev','ld-next'].forEach(id=>bindLibTip(document.getElementById(id)));
-})();
+
 
 updateAlbumThumb();
 
