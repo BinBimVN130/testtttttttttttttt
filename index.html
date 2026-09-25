@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Web Camera</title>
+  <title>web-cam-era</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960' fill='%23000000'%3E%3Cpath d='M480-240q100 0 170-70t70-170q0-87-55.5-153T524-716q-18-2-31 10t-13 30v196L342-342q-13 13-12 31t15 29q29 23 64 32.5t71 9.5Zm0 160q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" integrity="sha384-hStSInNIZ8ljtOVrmrgf7zdHMapaLBWoSnPTtF0nzsybp4+LuhDz6sHuEVpWIX8o" crossorigin="anonymous"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
     html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;
@@ -39,7 +40,7 @@
     #camera-frame{
       position:relative;background:#111;overflow:hidden;border-radius:10px;
       width:100%;height:100%;
-      transition:opacity .18s ease,transform .18s ease;
+      transition:width .22s ease,height .22s ease,opacity .18s ease,transform .18s ease;
     }
     #camera-frame.mode-switching{
       opacity:.5;
@@ -78,10 +79,10 @@
       font-size:13px;z-index:15;display:none;white-space:nowrap;
     }
     #zoom-label{
-      position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
-      font-size:15px;font-weight:600;color:rgba(255,255,255,.55);
-      z-index:35;pointer-events:none;letter-spacing:.4px;
-      display:none;text-shadow:0 1px 4px rgba(0,0,0,.5);
+      position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
+      font-size:12px;font-weight:500;color:rgba(255,255,255,.8);
+      z-index:35;pointer-events:none;letter-spacing:.3px;
+      display:none;text-shadow:0 1px 3px rgba(0,0,0,.45);
       transition:opacity .2s ease;
     }
 
@@ -109,8 +110,8 @@
     }
     .zoom-slider{
       writing-mode:vertical-lr;direction:rtl;
-      width:5px;height:120px;-webkit-appearance:none;appearance:none;
-      background:rgba(255,255,255,.28);border-radius:3px;outline:none;
+      width:3px;height:120px;-webkit-appearance:none;appearance:none;
+      background:rgba(255,255,255,.28);border-radius:2px;outline:none;
     }
     .zoom-slider::-webkit-slider-thumb{
       -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
@@ -160,7 +161,7 @@
     }
     #aspect-btn{
       width:40px;height:40px;border-radius:50%;
-      font-size:11px;font-weight:600;letter-spacing:-.2px;
+      font-size:11px;font-weight:700;letter-spacing:-.2px;
       background:rgba(255,255,255,.10);
       border:1px solid rgba(255,255,255,.12);
     }
@@ -180,8 +181,8 @@
     }
     #settings-modal{
       width:min(720px,96vw);min-height:min(480px,82vh);max-height:min(580px,90vh);
-      background:rgba(30,30,32,.94);
-      border:1px solid rgba(255,255,255,.16);
+      background:#1c1c1e;
+      border:1px solid rgba(255,255,255,.12);
       border-radius:16px;
       box-shadow:0 16px 48px rgba(0,0,0,.55);
       display:flex;overflow:hidden;
@@ -194,7 +195,7 @@
     .settings-nav{
       width:200px;flex-shrink:0;padding:16px 12px;
       border-right:1px solid rgba(255,255,255,.1);
-      background:rgba(255,255,255,.04);
+      background:#161618;
     }
     .settings-nav-title{
       font-size:12px;color:rgba(255,255,255,.45);padding:4px 10px 10px;font-weight:500;
@@ -231,6 +232,32 @@
     .settings-row:last-child{border-bottom:none}
     .settings-row .lab{font-size:14px;font-weight:500}
     .settings-row .hint{font-size:12px;color:rgba(255,255,255,.45);margin-top:4px}
+    .settings-section-label{
+      font-size:12px;font-weight:500;color:rgba(255,255,255,.45);
+      padding:16px 0 6px;letter-spacing:.02em;
+    }
+    .about-links{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px;margin-top:8px}
+    .about-link{
+      display:flex;align-items:center;gap:12px;padding:12px 14px;
+      border-radius:12px;border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);color:#fff;text-decoration:none;
+      font-size:14px;font-weight:500;transition:background .15s;
+    }
+    .about-link:hover{background:rgba(255,255,255,.12)}
+    .about-link svg{width:18px;height:18px;flex-shrink:0}
+    .about-link.disabled{opacity:.45;pointer-events:none;cursor:default}
+    .switch{position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0}
+    .switch input{opacity:0;width:0;height:0}
+    .switch-slider{
+      position:absolute;cursor:pointer;inset:0;border-radius:26px;
+      background:rgba(255,255,255,.2);transition:.2s;
+    }
+    .switch-slider:before{
+      position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;
+      border-radius:50%;background:#fff;transition:.2s;
+    }
+    .switch input:checked + .switch-slider{background:#ffaa00}
+    .switch input:checked + .switch-slider:before{transform:translateX(18px)}
     .settings-row select{
       min-width:140px;padding:8px 12px;border-radius:10px;
       border:1px solid rgba(255,255,255,.15);
@@ -256,10 +283,12 @@
       box-shadow:0 12px 40px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.16);
       min-width:160px;
       opacity:0;visibility:hidden;pointer-events:none;
-      transition:opacity .15s ease,visibility .15s;
+      transform:translateX(-8px);
+      transition:opacity .18s ease,visibility .18s,transform .18s ease;
     }
     #color-palette.show{
       opacity:1;visibility:visible;pointer-events:auto;
+      transform:translateX(0);
     }
     .panel-head{
       display:flex;align-items:center;justify-content:space-between;
@@ -287,10 +316,12 @@
       box-shadow:0 12px 40px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.16);
       width:176px;
       opacity:0;visibility:hidden;pointer-events:none;
-      transition:opacity .15s ease,visibility .15s;
+      transform:translateX(-8px);
+      transition:opacity .18s ease,visibility .18s,transform .18s ease;
     }
     #filter-panel.show{
       opacity:1;visibility:visible;pointer-events:auto;
+      transform:translateX(0);
     }
     .filter-grid{
       display:grid;grid-template-columns:repeat(2,1fr);gap:12px 10px;
@@ -312,10 +343,12 @@
       flex-direction:column;gap:2px;min-width:88px;
       box-shadow:0 12px 40px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.16);
       opacity:0;visibility:hidden;pointer-events:none;
-      transition:opacity .15s ease,visibility .15s;
+      transform:translateX(-8px);
+      transition:opacity .18s ease,visibility .18s,transform .18s ease;
     }
     #timer-menu.show{
       opacity:1;visibility:visible;pointer-events:auto;
+      transform:translateX(0);
     }
     .timer-opt{
       padding:9px 14px;border:none;background:transparent;color:#fff;
@@ -326,12 +359,18 @@
 
     /* EV / Sat / Temp popup */
     .adj-popup{
-      display:none;position:fixed;z-index:60;
+      display:flex;position:fixed;z-index:60;
       background:rgba(30,30,32,.92);border-radius:22px;padding:12px 16px 14px;
       box-shadow:0 12px 40px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.16);
       flex-direction:column;gap:10px;min-width:260px;
+      opacity:0;visibility:hidden;pointer-events:none;
+      transform:translateX(-8px);
+      transition:opacity .18s ease,visibility .18s,transform .18s ease;
     }
-    .adj-popup.show{display:flex}
+    .adj-popup.show{
+      opacity:1;visibility:visible;pointer-events:auto;
+      transform:translateX(0);
+    }
     .adj-popup .row-top{
       display:flex;align-items:center;justify-content:space-between;gap:12px;
     }
@@ -352,10 +391,72 @@
       background:#fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.35);
     }
 
+    
+    /* Tooltip nhanh — nhỏ hơn, trượt trái/phải */
+    .app-tip{
+      position:fixed;z-index:320;pointer-events:none;
+      padding:5px 9px;border-radius:8px;font-size:11px;font-weight:500;
+      background:rgba(30,30,32,.88);color:#fff;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 4px 14px rgba(0,0,0,.35);
+      opacity:0;white-space:nowrap;max-width:200px;
+      transition:opacity .15s ease, transform .15s ease;
+    }
+    .app-tip.from-left{ transform:translate(0,-50%) translateX(-6px); }
+    .app-tip.from-left.show{ opacity:1; transform:translate(0,-50%) translateX(0); }
+    .app-tip.from-right{ transform:translate(-100%,-50%) translateX(6px); }
+    .app-tip.from-right.show{ opacity:1; transform:translate(-100%,-50%) translateX(0); }
+
+    
+    /* QR: ẩn bộ lọc, hẹn giờ, EV, bão hòa, nhiệt độ */
+    body.mode-qr #filter-btn,
+    body.mode-qr #timer-btn,
+    body.mode-qr #ev-btn,
+    body.mode-qr #sat-btn,
+    body.mode-qr #temp-btn,
+    body.mode-qr #reset-btn,
+    body.mode-qr #filter-panel,
+    body.mode-qr #timer-menu,
+    body.mode-qr #ev-popup,
+    body.mode-qr #sat-popup,
+    body.mode-qr #temp-popup {
+      display:none !important;visibility:hidden !important;pointer-events:none !important;
+    }
+    body.mode-qr .left-divider{display:none !important}
+
+    
+    #perm-modal{
+      display:none;position:fixed;inset:0;z-index:300;
+      background:rgba(0,0,0,.6);align-items:center;justify-content:center;
+      padding:20px;
+    }
+    #perm-modal.show{display:flex}
+    .perm-box{
+      background:#1c1c1e;border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;padding:28px 24px 20px;max-width:320px;width:100%;
+      text-align:center;box-shadow:0 16px 48px rgba(0,0,0,.5);
+    }
+    .perm-box p{font-size:15px;font-weight:500;margin-bottom:18px;line-height:1.4}
+    .perm-box button{
+      min-width:100px;padding:10px 20px;border:none;border-radius:12px;
+      background:#ffaa00;color:#000;font-size:14px;font-weight:600;cursor:pointer;
+    }
+    #mode-hint{
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.92);
+      z-index:24;pointer-events:none;
+      font-size:22px;font-weight:600;color:#fff;
+      text-shadow:0 2px 12px rgba(0,0,0,.55);
+      opacity:0;transition:opacity .25s ease, transform .25s ease;
+      letter-spacing:.3px;white-space:nowrap;
+    }
+    #mode-hint.show{
+      opacity:1;transform:translate(-50%,-50%) scale(1);
+    }
+
     #toast{
       position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-10px);
       background:rgba(30,30,32,.95);color:#fff;padding:12px 20px;border-radius:14px;
-      font-size:14px;z-index:300;opacity:0;transition:opacity .18s ease,transform .18s ease;
+      font-size:14px;z-index:300;opacity:0;transition:width .22s ease,height .22s ease,opacity .18s ease,transform .18s ease;
       pointer-events:none;max-width:88%;text-align:center;
       box-shadow:0 8px 28px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);
     }
@@ -370,12 +471,20 @@
       display:flex;flex-direction:column;gap:5px;
       background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);
       border-radius:24px;padding:5px;box-shadow:0 4px 16px rgba(0,0,0,.25);
+      position:relative;
+    }
+    .mode-pill{
+      position:absolute;left:5px;width:38px;height:38px;border-radius:50%;
+      background:#ffaa00;z-index:0;pointer-events:none;
+      transition:top .22s cubic-bezier(.4,0,.2,1);
+      top:5px;
     }
     .mode-btn{
       width:38px;height:38px;border-radius:50%;border:none;background:transparent;color:#aaa;
-      display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background-color .12s linear,color .12s linear;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;
+      transition:color .15s linear;position:relative;z-index:1;
     }
-    .mode-btn.active{background:#ffaa00;color:#000}
+    .mode-btn.active{background:transparent;color:#000}
     .mode-btn svg{width:18px;height:18px}
 
     #shutter{
@@ -414,7 +523,8 @@
       background:rgba(255,255,255,.55);border-color:rgba(0,0,0,.12);
     }
     #app.light-bg .mode-btn{color:#222}
-    #app.light-bg .mode-btn.active{background:#ffaa00;color:#000}
+    #app.light-bg .mode-btn.active{background:transparent;color:#000}
+    #app.light-bg .mode-pill{background:#ffaa00}
     #app.light-bg .flip-btn{
       background:rgba(255,255,255,.55);color:#111;border-color:rgba(0,0,0,.12);
     }
@@ -432,11 +542,9 @@
     /* Khi đang quay: ẩn hết trừ nút dừng */
     .recording-active .left-controls,
     .recording-active #reset-btn,
-    .recording-active .zoom-control,
     .recording-active .mode-switcher,
     .recording-active .flip-btn,
     .recording-active #fps,
-    .recording-active #zoom-label,
     .recording-active #qr-hint,
     .recording-active #color-palette,
     .recording-active #timer-menu,
@@ -447,22 +555,30 @@
       visibility:hidden !important;pointer-events:none !important;
     }
 
-    /* Mic level meter - đáy màn hình */
+    /* Mic level meter - góc dưới trái trong khung camera */
     #mic-meter{
-      display:none;position:fixed;left:18px;bottom:16px;z-index:36;
-      align-items:center;gap:8px;pointer-events:none;
-      opacity:0;transform:translateY(8px);
+      display:none;position:absolute;left:10px;bottom:10px;z-index:22;
+      align-items:center;gap:6px;pointer-events:none;
+      opacity:0;transform:translateY(4px);
       transition:opacity .18s ease,transform .18s ease;
+      padding:5px 8px;border-radius:8px;
+      background:rgba(0,0,0,.4);
     }
     #mic-meter.show{display:flex;opacity:1;transform:translateY(0)}
-    #mic-meter svg{width:14px;height:14px;flex-shrink:0;opacity:.85}
+    #mic-meter svg{width:13px;height:13px;flex-shrink:0;opacity:.9}
     #mic-meter .bar-bg{
-      width:72px;height:6px;border-radius:3px;background:rgba(255,255,255,.2);
+      width:64px;height:5px;border-radius:3px;background:rgba(255,255,255,.22);
       overflow:hidden;
     }
     #mic-meter .bar-fill{
       height:100%;width:0%;border-radius:3px;
-      background:#34c759;transition:width .05s linear,background-color .1s linear;
+      background:#34c759;transition:width .06s linear,background-color .12s linear;
+    }
+    
+
+    .recording-active .zoom-control,
+    .recording-active #zoom-label{
+      display:flex !important;visibility:visible !important;pointer-events:auto !important;opacity:1 !important;
     }
     .recording-active #shutter{visibility:visible !important;pointer-events:auto !important}
     .recording-active #mic-meter{display:flex !important;visibility:visible !important}
@@ -506,17 +622,17 @@
 <svg id="svg-filters" width="0" height="0" style="position:absolute">
   <defs>
     <filter id="sharpen" color-interpolation-filters="sRGB">
-      <feConvolveMatrix order="3" kernelMatrix="0 -1 0 -1 5 -1 0 -1 0" preserveAlpha="true"/>
+      <feConvolveMatrix order="3" kernelMatrix="0 -1 0 -1 6 -1 0 -1 0" preserveAlpha="true"/>
     </filter>
   </defs>
 </svg>
 <div id="app">
-  <div id="fps">FPS: -- <span class="ver">| v1.0.0</span></div>
+  <div id="fps">FPS: --</div>
 
   <div id="stage">
     <div id="camera-frame">
       <div id="video-wrap">
-        <video id="video" autoplay playsinline muted></video>
+        <video id="video" autoplay playsinline muted disablepictureinpicture></video>
       </div>
       <canvas id="canvas"></canvas>
       <canvas id="rec-canvas"></canvas>
@@ -531,6 +647,14 @@
       <div id="countdown"></div>
       <div id="rec-timer">00:00:00</div>
       <div id="qr-hint">Đưa QR vào khung hình để bắt đầu quét</div>
+      <div id="mode-hint"></div>
+      <div id="mic-meter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+        </svg>
+        <div class="bar-bg"><div class="bar-fill" id="mic-bar"></div></div>
+      </div>
     </div>
 
     <!-- Zoom cố định theo stage -->
@@ -546,8 +670,9 @@
   <!-- Left -->
   <div class="left-controls">
     <button class="ctrl-btn" id="settings-btn" title="Cài đặt">
-      <svg viewBox="0 -960 960 960" fill="currentColor" style="width:20px;height:20px">
-        <path d="M354.46-180H252.31q-29.92 0-51.12-21.19Q180-222.39 180-252.31v-102.15l-74.31-74.93q-10.23-10.84-15.46-23.99Q85-466.54 85-480t5.23-26.62q5.23-13.15 15.46-23.99L180-605.54v-102.15q0-29.92 21.19-51.12Q222.39-780 252.31-780h102.15l74.93-74.31q10.84-10.23 23.99-15.46Q466.54-875 480-875t26.62 5.23q13.15 5.23 23.99 15.46L605.54-780h102.15q29.92 0 51.12 21.19Q780-737.61 780-707.69v102.15l74.31 74.93q10.23 10.84 15.46 23.99Q875-493.46 875-480t-5.23 26.62q-5.23 13.15-15.46 23.99L780-354.46v102.15q0 29.92-21.19 51.12Q737.61-180 707.69-180H605.54l-74.93 74.31q-10.84 10.23-23.99 15.46Q493.46-85 480-85t-26.62-5.23q-13.15-5.23-23.99-15.46L354.46-180Zm256.08-169.46q54.07-54.08 54.07-130.54t-54.07-130.54Q556.46-664.61 480-664.61t-130.54 54.07Q295.39-556.46 295.39-480t54.07 130.54q54.08 54.07 130.54 54.07t130.54-54.07Zm-218.81-42.27q-36.35-36.35-36.35-88.27 0-51.92 36.35-88.27 36.35-36.35 88.27-36.35 51.92 0 88.27 36.35 36.35 36.35 36.35 88.27 0 51.92-36.35 88.27-36.35 36.35-88.27 36.35-51.92 0-88.27-36.35ZM380-240l91.15 91.15q3.46 3.46 8.85 3.46t8.85-3.46L580-240h127.69q5.39 0 8.85-3.46t3.46-8.85V-380l91.15-91.15q3.46-3.46 3.46-8.85t-3.46-8.85L720-580v-127.69q0-5.39-3.46-8.85t-8.85-3.46H580l-91.15-91.15q-3.46-3.46-8.85-3.46t-8.85 3.46L380-720H252.31q-5.39 0-8.85 3.46t-3.46 8.85V-580l-91.15 91.15q-3.46 3.46-3.46 8.85t3.46 8.85L240-380v127.69q0 5.39 3.46 8.85t8.85 3.46H380Zm100-240Z"/>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
     </button>
         <button class="ctrl-btn filter-btn-lg" id="filter-btn" title="Bộ lọc">
@@ -558,7 +683,7 @@
       </svg>
     </button>
     <div class="flash-group">
-      <button class="ctrl-btn" id="color-btn" title="Màu flash"><div class="dot" id="color-dot"></div></button>
+      <button class="ctrl-btn" id="color-btn" title="Màu đèn"><div class="dot" id="color-dot"></div></button>
       <button class="ctrl-btn" id="flash-btn" title="Flash">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       </button>
@@ -693,13 +818,14 @@
   <!-- Right -->
   <div class="right-controls">
     <div class="mode-switcher">
-      <button class="mode-btn active" data-mode="photo">
+      <div class="mode-pill" id="mode-pill"></div>
+      <button class="mode-btn active" data-mode="photo" title="Chụp ảnh">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
       </button>
-      <button class="mode-btn" data-mode="video">
+      <button class="mode-btn" data-mode="video" title="Quay video">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
       </button>
-      <button class="mode-btn" data-mode="qr">
+      <button class="mode-btn" data-mode="qr" title="Quét QR">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM13 13h2v2h-2zM15 15h2v2h-2zM13 17h2v2h-2zM15 19h2v2h-2zM17 13h2v2h-2zM19 15h2v2h-2zM17 17h2v2h-2zM19 19h2v2h-2z"/></svg>
       </button>
     </div>
@@ -723,58 +849,152 @@
     <div id="settings-modal" role="dialog" aria-modal="true">
       <div class="settings-nav">
         <div class="settings-nav-title">Tổng quan</div>
-        <button type="button" class="settings-nav-item active" data-panel="camera">
+        <button type="button" class="settings-nav-item active" data-panel="general">
+          <svg viewBox="0 -960 960 960" fill="currentColor" style="width:18px;height:18px"><path d="M194.27-194.27q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm-480-240q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm-480-240q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Z"/></svg>
+          Chung
+        </button>
+        <button type="button" class="settings-nav-item" data-panel="devices">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <path d="M8 21h8M12 17v4"/>
+          </svg>
+          Thiết bị
+        </button>
+        <button type="button" class="settings-nav-item" data-panel="camera">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           Camera
         </button>
-        <button type="button" class="settings-nav-item" data-panel="general">
-          <svg viewBox="0 -960 960 960" fill="currentColor" style="width:18px;height:18px">
-            <path d="M194.27-194.27q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm-480-240q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm-480-240q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Zm240 0q-18.88-18.88-18.88-45.73 0-26.85 18.88-45.73 18.88-18.88 45.73-18.88 26.85 0 45.73 18.88 18.88 18.88 18.88 45.73 0 26.85-18.88 45.73-18.88 18.88-45.73 18.88-26.85 0-45.73-18.88Z"/>
+        <button type="button" class="settings-nav-item" data-panel="micro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
           </svg>
-          Chung
+          Mic
+        </button>
+        <button type="button" class="settings-nav-item" data-panel="about">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4"/>
+            <path d="M12 8h.01"/>
+          </svg>
+          Giới thiệu
         </button>
       </div>
       <div class="settings-body">
         <div class="settings-body-head">
-          <h2 id="settings-title">Camera</h2>
+          <h2 id="settings-title">Chung</h2>
           <button type="button" class="settings-close" id="settings-close">×</button>
         </div>
-        <div class="settings-panel active" id="panel-camera">
+        
+        
+        <div class="settings-panel" id="panel-micro">
           <div class="settings-row">
             <div>
-              <div class="lab">Độ phân giải xem trước</div>
-              <div class="hint">Dùng khi xem, quay video và quét QR</div>
+              <div class="lab">Khuếch đại micro</div>
+              <div class="hint">Chỉ áp dụng khi quay video</div>
             </div>
-            <select id="set-preview-res">
-              <option value="1280x720">720p (1280×720)</option>
-              <option value="1920x1080">1080p (1920×1080)</option>
-              <option value="640x480">480p (640×480)</option>
-            </select>
-          </div>
-          <div class="settings-row">
-            <div>
-              <div class="lab">Độ phân giải khi chụp</div>
-              <div class="hint">Chỉ áp dụng lúc bấm chụp ảnh</div>
-            </div>
-            <select id="set-capture-res">
-              <option value="1920x1080">1080p (1920×1080)</option>
-              <option value="1280x720">720p (1280×720)</option>
-              <option value="max">Cao nhất cam hỗ trợ</option>
-            </select>
-          </div>
-          <div class="settings-row">
-            <div>
-              <div class="lab">FPS xem trước</div>
-              <div class="hint">Ưu tiên; cam có thể thấp hơn</div>
-            </div>
-            <select id="set-preview-fps">
-              <option value="30">30 FPS</option>
-              <option value="60">60 FPS</option>
-              <option value="24">24 FPS</option>
+            <select id="set-mic-gain">
+              <option value="2">2×</option>
+              <option value="5">5×</option>
+              <option value="10">10×</option>
+              <option value="20">20×</option>
+              <option value="50">50×</option>
+              <option value="100">100×</option>
             </select>
           </div>
         </div>
-        <div class="settings-panel" id="panel-general">
+        <div class="settings-panel" id="panel-devices">
+          <div class="settings-row">
+            <div>
+              <div class="lab">Camera</div>
+              <div class="hint">Chọn thiết bị camera</div>
+            </div>
+            <select id="set-video-device" style="min-width:180px;max-width:240px">
+              <option value="">Mặc định</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="lab">Mic</div>
+              <div class="hint">Chọn thiết bị micro (khi quay video)</div>
+            </div>
+            <select id="set-audio-device" style="min-width:180px;max-width:240px">
+              <option value="">Mặc định</option>
+            </select>
+          </div>
+          <div class="settings-section-label">Định dạng</div>
+          <div class="settings-row">
+            <div>
+              <div class="lab">Định dạng ảnh</div>
+              <div class="hint">AVIF/WebP nhẹ hơn; không hỗ trợ sẽ dùng PNG</div>
+            </div>
+            <select id="set-photo-fmt">
+              <option value="png">PNG</option>
+              <option value="webp">WebP</option>
+              <option value="avif">AVIF</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="lab">Định dạng video</div>
+              <div class="hint">Tùy trình duyệt; ưu tiên lựa chọn của bạn</div>
+            </div>
+            <select id="set-video-fmt">
+              <option value="webm">WebM</option>
+              <option value="mp4">MP4</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-panel" id="panel-camera">
+          <div class="settings-row">
+            <div>
+              <div class="lab">Độ phân giải</div>
+              <div class="hint">Áp dụng khi xem trước, quay video, quét QR (Ảnh hưởng đến hiệu suất)</div>
+            </div>
+            <select id="set-preview-res">
+              <option value="640x480">480p</option>
+              <option value="1280x720">720p</option>
+              <option value="1920x1080">1080p</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="lab">FPS khung hình</div>
+            </div>
+            <select id="set-preview-fps">
+              <option value="24">24 FPS</option>
+              <option value="30">30 FPS</option>
+              <option value="50">50 FPS</option>
+              <option value="60">60 FPS</option>
+              <option value="0">Không giới hạn</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-panel" id="panel-about">
+          <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 12px 8px;gap:12px">
+            <svg viewBox="0 -960 960 960" width="56" height="56" fill="currentColor" style="opacity:.95">
+              <path d="M480-240q100 0 170-70t70-170q0-87-55.5-153T524-716q-18-2-31 10t-13 30v196L342-342q-13 13-12 31t15 29q29 23 64 32.5t71 9.5Zm0 160q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/>
+            </svg>
+            <div style="font-size:18px;font-weight:600">web-cam-era</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.5)">Phiên bản 1.1.0</div>
+            <div class="about-links">
+              <a class="about-link" href="https://github.com/BinBimVN130/webs-cam-era" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.5 1 .11-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.81 1.1.81 2.22 0 1.61-.01 2.9-.01 3.29 0 .32.22.7.83.58C20.57 21.8 24 17.3 24 12 24 5.37 18.63 0 12 0z"/></svg>
+                GitHub
+              </a>
+              <a class="about-link disabled" href="#" title="Sắp có" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.89-.5-4.14-1.19v9.62c0 2.13-.86 4.06-2.33 5.4a7.35 7.35 0 0 1-5.4 2.17c-2.13 0-4.06-.86-5.4-2.33A7.35 7.35 0 0 1 2.82 18.2c0-2.13.86-4.06 2.33-5.4a7.35 7.35 0 0 1 4.14-2.14v4.15a3.3 3.3 0 0 0-1.66.69 3.25 3.25 0 0 0-1.15 2.55c0 .97.39 1.85 1.02 2.48a3.5 3.5 0 0 0 2.48 1.02c.97 0 1.85-.39 2.48-1.02a3.5 3.5 0 0 0 1.02-2.48V.02h.05z"/></svg>
+                TikTok
+              </a>
+              <a class="about-link disabled" href="#" title="Sắp có" aria-disabled="true">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.54 3.5 12 3.5 12 3.5s-7.54 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.84.55 9.38.55 9.38.55s7.54 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg>
+                YouTube
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="settings-panel active" id="panel-general">
           <div class="settings-row">
             <div>
               <div class="lab">Font chữ</div>
@@ -783,6 +1003,29 @@
               <option value="system">Hệ thống</option>
               <option value="inter">Inter</option>
             </select>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="lab">Ngôn ngữ</div>
+            </div>
+            <select id="set-lang" disabled>
+              <option value="vi">Tiếng Việt</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="lab">Lưu lại các cài đặt</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="set-persist" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row" style="border-bottom:none;padding-top:8px">
+            <div>
+              <div class="lab">Khôi phục cài đặt gốc</div>
+            </div>
+            <button type="button" id="btn-factory-reset" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(255,59,48,.55);background:rgba(255,59,48,.18);color:#ff6b63;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Khôi phục</button>
           </div>
         </div>
       </div>
@@ -800,14 +1043,13 @@
     </div>
   </div>
   <div id="fullscreen-flash"></div>
-  <div id="mic-meter">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
-        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-        <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
-      </svg>
-      <div class="bar-bg"><div class="bar-fill" id="mic-bar"></div></div>
-    </div>
   <div id="zoom-label">1x</div>
+  <div id="perm-modal">
+    <div class="perm-box">
+      <p>Vui lòng cấp quyền trình duyệt</p>
+      <button type="button" id="perm-ok">OK</button>
+    </div>
+  </div>
   <div id="toast"></div>
 </div>
 
@@ -815,7 +1057,7 @@
 const state = {
   stream:null, mode:'photo', isRecording:false, mediaRecorder:null, recordedChunks:[],
   flipH:false, flipV:false, flashOn:false, flashColor:'#ffffff',
-  timerSec:0, isCounting:false, facingMode:'user', forceAspect:'16:9', previewRes:'1280x720', captureRes:'1920x1080', previewFps:30,
+  timerSec:0, isCounting:false, facingMode:'user', videoDeviceId:null, audioDeviceId:null, forceAspect:'16:9', previewRes:'1280x720', captureRes:'1280x720', previewFps:30, micGain:2, photoFmt:'png', videoFmt:'webm', persistSettings:true,
   recAnimId:null, qrScanning:false, qrAnimId:null,
   zoom:1, panX:0, panY:0, isPanning:false,
   panStartX:0, panStartY:0, panOriginX:0, panOriginY:0,
@@ -831,7 +1073,7 @@ const video=document.getElementById('video');
 const canvas=document.getElementById('canvas');
 const ctx=canvas.getContext('2d',{willReadFrequently:true});
 const recCanvas=document.getElementById('rec-canvas');
-const recCtx=recCanvas.getContext('2d');
+const recCtx=recCanvas.getContext('2d',{alpha:false,desynchronized:true});
 const noCamera=document.getElementById('no-camera');
 const countdownEl=document.getElementById('countdown');
 const recTimerEl=document.getElementById('rec-timer');
@@ -862,6 +1104,29 @@ const shutterFlash=document.getElementById('shutter-flash');
 const fullscreenFlash=document.getElementById('fullscreen-flash');
 const flipVBtn=document.getElementById('flip-v');
 const flipHBtn=document.getElementById('flip-h');
+
+
+function showModeHint(text){
+  const el = document.getElementById('mode-hint');
+  if(!el) return;
+  el.textContent = text;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(showModeHint._t);
+  showModeHint._t = setTimeout(()=> el.classList.remove('show'), 1200);
+}
+function showPermModal(){
+  const m = document.getElementById('perm-modal');
+  if(m) m.classList.add('show');
+}
+function hidePermModal(){
+  const m = document.getElementById('perm-modal');
+  if(m) m.classList.remove('show');
+}
+document.getElementById('perm-ok')?.addEventListener('click', ()=>{
+  hidePermModal();
+});
 
 function showToast(msg,ms=2500){
   toast.textContent=msg;toast.classList.add('show');
@@ -895,7 +1160,7 @@ function placePopup(el, btn, align){
   if(align === 'top'){
     let top = r.top - 4;
     el.style.top = top + 'px';
-    el.style.transform = 'none';
+    // không ghi đè transform (menu dùng translateX cho slide)
     requestAnimationFrame(()=>{
       const h = el.offsetHeight || 0;
       const w = el.offsetWidth || 0;
@@ -909,20 +1174,26 @@ function placePopup(el, btn, align){
       }
     });
   } else {
-    el.style.top=(r.top+r.height/2)+'px';
-    el.style.transform='translateY(-50%)';
+    // căn giữa theo nút bằng top, không dùng transform
+    const h = el.offsetHeight || 120;
+    el.style.top = (r.top + r.height/2 - h/2) + 'px';
+    requestAnimationFrame(()=>{
+      const hh = el.offsetHeight || h;
+      el.style.top = (r.top + r.height/2 - hh/2) + 'px';
+    });
   }
 }
 
 function filterCssExtra(){
+  // Preview: chỉ CSS nhẹ (không SVG convolve) để giữ FPS
   switch(state.filter){
-    case 'vivid': return ' saturate(1.85) contrast(1.12)';
-    case 'fresh': return ' saturate(1.45) hue-rotate(18deg) brightness(1.06)';
-    case 'natural': return ' contrast(1.08) saturate(1.15)';
-    case 'dawn': return ' sepia(0.4) saturate(1.35) hue-rotate(-12deg) brightness(1.05)';
-    case 'vintage': return ' sepia(0.6) contrast(0.95) brightness(0.96) saturate(0.9)';
-    case 'sharp': return ' contrast(1.15) saturate(1.05)'; /* không dùng feConvolve realtime → tránh lag */
-    case 'mono': return ' grayscale(1) contrast(1.12)';
+    case 'vivid': return ' saturate(1.7) contrast(1.14) brightness(1.02)';
+    case 'fresh': return ' saturate(1.4) hue-rotate(12deg) brightness(1.05) contrast(1.04)';
+    case 'natural': return ' contrast(1.1) saturate(1.12) brightness(1.01)';
+    case 'dawn': return ' sepia(0.28) saturate(1.25) hue-rotate(-8deg) brightness(1.04)';
+    case 'vintage': return ' sepia(0.45) contrast(1.05) brightness(0.97) saturate(0.85)';
+    case 'sharp': return ' contrast(1.28) saturate(1.08) brightness(1.03)'; /* fog giảm; sắc nét canvas lúc chụp/quay */
+    case 'mono': return ' grayscale(1) contrast(1.18) brightness(1.02)';
     default: return '';
   }
 }
@@ -931,9 +1202,14 @@ function applyFilters(){
   const sat = state.sat;
   let filter = `brightness(${br}) saturate(${sat})`;
   if(state.temp > 0.02){
-    filter += ` sepia(${state.temp*0.55}) saturate(${1+state.temp*0.3})`;
+    /* Ấm: tỷ lệ theo thanh kéo */
+    const t = state.temp; // 0..1
+    filter += ` sepia(${t*0.45}) saturate(${1+t*0.3}) brightness(${1+t*0.02})`;
   }else if(state.temp < -0.02){
-    filter += ` hue-rotate(${state.temp*35}deg) saturate(${1-state.temp*0.15})`;
+    /* Lạnh: tăng dần theo |t|, không nhảy full xanh */
+    const t = Math.abs(state.temp); // 0..1
+    // hue cố định vùng xanh lạnh nhẹ; cường độ = sepia * t + saturate nhẹ
+    filter += ` sepia(${t*0.22}) hue-rotate(185deg) saturate(${1+t*0.25}) brightness(${1+t*0.03})`;
   }
   filter += filterCssExtra();
   video.style.filter = filter;
@@ -986,10 +1262,97 @@ function updateShutterColor(){
     shutter.classList.add('dark-mode');
   else shutter.classList.remove('dark-mode');
 }
+
+function canvasSupportsType(type){
+  try{
+    const c = document.createElement('canvas');
+    c.width = 2; c.height = 2;
+    return c.toDataURL(type).indexOf('data:'+type) === 0;
+  }catch(e){ return false; }
+}
+function savePhotoFromCanvas(cvs){
+  const fmt = state.photoFmt || 'png';
+  const tryList = fmt === 'png' ? ['image/png']
+    : fmt === 'webp' ? ['image/webp','image/png']
+    : ['image/avif','image/webp','image/png'];
+  const quality = 0.92;
+  const tryNext = (i) => {
+    if(i >= tryList.length){ showToast('Không lưu được ảnh'); return; }
+    const type = tryList[i];
+    const ext = type === 'image/png' ? 'png' : (type === 'image/webp' ? 'webp' : 'avif');
+    if(type !== 'image/png' && !canvasSupportsType(type)){
+      tryNext(i+1); return;
+    }
+    try{
+      cvs.toBlob(b=>{
+        if(b && b.size > 0){
+          downloadBlob(b, `photo_${Date.now()}.${ext}`);
+          showToast('Đã lưu ảnh (.' + ext + ')');
+        } else tryNext(i+1);
+      }, type, type === 'image/png' ? undefined : quality);
+    }catch(e){ tryNext(i+1); }
+  };
+  tryNext(0);
+}
+
+
+const PERSIST_KEY = 'webcam-persist-v1';
+function loadPersistedSettings(){
+  try{
+    const flag = localStorage.getItem('webcam-persist-on');
+    if(flag === '0'){ state.persistSettings = false; return; }
+    state.persistSettings = true;
+    const raw = localStorage.getItem(PERSIST_KEY);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    if(d.flipH != null) state.flipH = !!d.flipH;
+    if(d.flipV != null) state.flipV = !!d.flipV;
+    if(d.videoDeviceId !== undefined) state.videoDeviceId = d.videoDeviceId || null;
+    if(d.audioDeviceId !== undefined) state.audioDeviceId = d.audioDeviceId || null;
+    if(d.photoFmt) state.photoFmt = d.photoFmt;
+    if(d.videoFmt) state.videoFmt = d.videoFmt;
+    if(d.previewRes) state.previewRes = d.previewRes;
+    if(d.previewFps != null) state.previewFps = d.previewFps;
+    if(d.micGain != null) state.micGain = d.micGain;
+    if(d.forceAspect) state.forceAspect = d.forceAspect;
+    if(d.font) applyFont(d.font);
+  }catch(e){}
+}
+function savePersistedSettings(){
+  if(!state.persistSettings) return;
+  try{
+    const d = {
+      flipH: state.flipH,
+      flipV: state.flipV,
+      videoDeviceId: state.videoDeviceId,
+      audioDeviceId: state.audioDeviceId,
+      photoFmt: state.photoFmt,
+      videoFmt: state.videoFmt,
+      previewRes: state.previewRes,
+      previewFps: state.previewFps,
+      micGain: state.micGain,
+      forceAspect: state.forceAspect,
+      font: document.documentElement.getAttribute('data-font') || 'system'
+    };
+    localStorage.setItem(PERSIST_KEY, JSON.stringify(d));
+    localStorage.setItem('webcam-persist-on', '1');
+  }catch(e){}
+}
+
 function downloadBlob(blob,name){
-  const u=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=u;a.download=name;document.body.appendChild(a);a.click();
-  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(u)},150);
+  if(!blob||!blob.size){ showToast('File trống, không tải được'); return; }
+  const u=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=u;
+  a.download=name;
+  a.style.display='none';
+  document.body.appendChild(a);
+  a.click();
+  // Giữ URL lâu hơn một chút để trình duyệt kịp tải
+  setTimeout(()=>{
+    try{ document.body.removeChild(a); }catch(e){}
+    URL.revokeObjectURL(u);
+  }, 2000);
 }
 function adjustAspectRatio(){
   const sw=stage.clientWidth,sh=stage.clientHeight;
@@ -1027,32 +1390,67 @@ async function startCamera(withAudio=false){
     if(state.stream){
       state.stream.getTracks().forEach(t=>{ try{t.stop()}catch(e){} });
       state.stream=null;
-      state._fpsRunning = false; // cho phép đếm lại sau khi mở cam mới
+      state._fpsRunning = false;
     }
 
     const [pw, ph] = (state.previewRes || '1280x720').split('x').map(Number);
-    const pfps = state.previewFps || 30;
+    const pfps = (state.previewFps === 0 || state.previewFps) ? state.previewFps : 30;
+    const videoConstraint = {
+      width: { ideal: pw },
+      height: { ideal: ph }
+    };
+    // Chỉ dùng ideal (không min) để browser không hạ FPS ép
+    if(pfps && pfps > 0){
+      videoConstraint.frameRate = { ideal: pfps };
+    } else {
+      videoConstraint.frameRate = { ideal: 60 };
+      videoConstraint.advanced = [
+        { frameRate: { ideal: 60 } },
+        { frameRate: { ideal: 30 } }
+      ];
+    }
+    if(state.videoDeviceId){
+      videoConstraint.deviceId = { exact: state.videoDeviceId };
+    } else {
+      videoConstraint.facingMode = state.facingMode;
+    }
+    let audioConstraint = false;
+    if(withAudio){
+      audioConstraint = state.audioDeviceId
+        ? { deviceId: { exact: state.audioDeviceId }, echoCancellation: true, noiseSuppression: true }
+        : { echoCancellation: true, noiseSuppression: true };
+    }
     state.stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: state.facingMode,
-        width: { ideal: pw },
-        height: { ideal: ph },
-        frameRate: { ideal: pfps, min: 15 }
-      },
-      audio: !!withAudio
+      video: videoConstraint,
+      audio: audioConstraint
     });
+    // Ép FPS cao nhất cam cho phép (trong giới hạn setting)
+    try{
+      const vtrack = state.stream.getVideoTracks()[0];
+      const caps = vtrack.getCapabilities?.() || {};
+      const settings = vtrack.getSettings?.() || {};
+      if(caps.frameRate){
+        const maxF = caps.frameRate.max || 60;
+        const want = (pfps && pfps > 0) ? Math.min(pfps, maxF) : maxF;
+        if(!settings.frameRate || Math.abs(settings.frameRate - want) > 1){
+          await vtrack.applyConstraints({ frameRate: { ideal: want } });
+        }
+      }
+    }catch(e){ console.warn('apply fps', e); }
     video.srcObject = state.stream;
     video.muted = true;
+    video.playsInline = true;
     await new Promise(r=>{ if(video.readyState>=2) r(); else video.onloadedmetadata=()=>r(); });
     await video.play();
     noCamera.classList.add('hidden');
     requestAnimationFrame(()=>{ adjustAspectRatio(); setTimeout(adjustAspectRatio, 150); });
     startFpsCounter();
     if(state.mode === 'video') startMicMeter();
+    if(typeof refreshDeviceLists === 'function') refreshDeviceLists();
   }catch(e){
     console.error(e);
     noCamera.classList.remove('hidden');
-    showToast('Không thể truy cập camera.');
+    showPermModal();
   }
 }
 
@@ -1075,7 +1473,7 @@ function startFpsCounter(){
       }
       const now = performance.now();
       if(now - state.lastFpsTime >= 1000){
-        fpsEl.innerHTML = 'FPS: ' + state.frameCount + ' <span class="ver">| v1.0.0</span>';
+        if(!state.isRecording) fpsEl.textContent = 'FPS: ' + state.frameCount;
         state.frameCount = 0;
         state.lastFpsTime = now;
       }
@@ -1088,7 +1486,7 @@ function startFpsCounter(){
       try{
         const track = state.stream?.getVideoTracks()?.[0];
         const fr = track?.getSettings?.()?.frameRate;
-        if(fr) fpsEl.innerHTML = 'FPS: ' + Math.round(fr) + ' <span class="ver">| v1.0.0</span>';
+        if(fr) fpsEl.innerHTML = 'FPS: ' + Math.round(fr);
       }catch(e){}
       setTimeout(updateFromTrack, 1000);
     };
@@ -1096,8 +1494,12 @@ function startFpsCounter(){
   }
 }
 
-function drawToCanvas(targetCtx,tw,th){
+/** quality: 'high' = chụp (sharpen SVG), 'fast' = quay (CSS nhẹ, không convolve mỗi frame) */
+function drawToCanvas(targetCtx,tw,th,quality){
+  const hi = quality !== 'fast';
   targetCtx.save();
+  targetCtx.imageSmoothingEnabled = true;
+  targetCtx.imageSmoothingQuality = hi ? 'high' : 'medium';
   const cx=tw/2,cy=th/2;
   targetCtx.translate(cx,cy);
   targetCtx.scale(state.flipH?-state.zoom:state.zoom, state.flipV?-state.zoom:state.zoom);
@@ -1105,11 +1507,11 @@ function drawToCanvas(targetCtx,tw,th){
   const scaleY=th/(cameraFrame.clientHeight||th);
   targetCtx.translate(state.panX*scaleX/state.zoom, state.panY*scaleY/state.zoom);
   targetCtx.translate(-cx,-cy);
-  // apply same filters via canvas is hard; for capture we draw raw then note
   let f = video.style.filter || 'none';
-  // Khi chụp/quay + filter sắc nét: thêm sharpen nhẹ trên canvas (1 lần, không lag preview)
-  if(state.filter === 'sharp' && f.indexOf('url(#sharpen)') < 0){
-    f = (f === 'none' ? '' : f) + ' url(#sharpen)';
+  // feConvolve rất nặng → chỉ khi CHỤP; quay giữ contrast CSS đã có trên video
+  if(hi && state.filter === 'sharp'){
+    if(f.indexOf('url(#sharpen)') < 0)
+      f = (f === 'none' || !f ? '' : f) + ' url(#sharpen)';
   }
   targetCtx.filter = f || 'none';
   targetCtx.drawImage(video,0,0,tw,th);
@@ -1120,29 +1522,37 @@ function drawToCanvas(targetCtx,tw,th){
 function startQRScan(){
   if(state.qrScanning||!video.videoWidth) return;
   state.qrScanning=true;
+  // Tái sử dụng canvas nhỏ — không tạo mới mỗi frame
+  if(!state._qrCanvas){ state._qrCanvas = document.createElement('canvas'); state._qrCtx = state._qrCanvas.getContext('2d',{willReadFrequently:true}); }
+  let lastScan = 0;
+  const SCAN_MS = 180; // ~5–6 lần/giây, đủ QR, nhẹ CPU
   const loop=async()=>{
     if(!state.qrScanning||state.mode!=='qr') return;
-    if(video.readyState>=2){
+    const now = performance.now();
+    if(video.readyState>=2 && now - lastScan >= SCAN_MS){
+      lastScan = now;
       const w=video.videoWidth,h=video.videoHeight;
-      canvas.width=w;canvas.height=h;
-      drawToCanvas(ctx,w,h);
+      // Chỉ scale nhỏ để quét — không full-res
+      const scale = Math.min(0.45, 480/Math.max(w,1));
+      const tw=Math.max(160,Math.floor(w*scale)), th=Math.max(160,Math.floor(h*scale));
+      const qc = state._qrCanvas, qx = state._qrCtx;
+      if(qc.width!==tw||qc.height!==th){ qc.width=tw; qc.height=th; }
+      qx.drawImage(video,0,0,tw,th);
       let found=null;
       if('BarcodeDetector' in window){
         try{
-          const det=new BarcodeDetector({formats:['qr_code']});
-          const bmp=await createImageBitmap(canvas);
-          const codes=await det.detect(bmp);bmp.close();
+          if(!state._qrDet) state._qrDet = new BarcodeDetector({formats:['qr_code']});
+          const bmp=await createImageBitmap(qc);
+          const codes=await state._qrDet.detect(bmp);bmp.close();
           if(codes?.length&&codes[0].rawValue) found=codes[0].rawValue;
         }catch(e){}
       }
-      if(!found){
-        const scale=.5;
-        const tw=Math.max(200,Math.floor(w*scale)),th=Math.max(200,Math.floor(h*scale));
-        const t=document.createElement('canvas');t.width=tw;t.height=th;
-        t.getContext('2d').drawImage(canvas,0,0,tw,th);
-        const img=t.getContext('2d').getImageData(0,0,tw,th);
-        const code=jsQR(img.data,tw,th,{inversionAttempts:'attemptBoth'});
-        if(code?.data) found=code.data;
+      if(!found && typeof jsQR === 'function'){
+        try{
+          const img=qx.getImageData(0,0,tw,th);
+          const code=jsQR(img.data,tw,th,{inversionAttempts:'dontInvert'});
+          if(code?.data) found=code.data;
+        }catch(e){}
       }
       if(found){
         stopQRScan();
@@ -1170,10 +1580,23 @@ async function capturePhoto(){
     }
     countdownEl.classList.remove('show');state.isCounting=false;
   }
-  await boostCaptureResolution();
-  const w=video.videoWidth,h=video.videoHeight;
+  try{ await video.play(); }catch(e){}
+  const boosted = await boostCaptureResolution();
+  if(boosted) await waitForVideoFrame(800);
+  let w=video.videoWidth,h=video.videoHeight;
+  if(!w||!h){ showToast('Camera chưa sẵn sàng'); await restorePreviewResolution(); return; }
   canvas.width=w;canvas.height=h;
+  let enteredFs = false;
   if(state.flashOn){
+    try{
+      if(!document.fullscreenElement && !document.webkitFullscreenElement){
+        const el = document.documentElement;
+        if(el.requestFullscreen) await el.requestFullscreen();
+        else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+        enteredFs = true;
+        await new Promise(r=>setTimeout(r,120));
+      }
+    }catch(e){}
     fullscreenFlash.style.background=state.flashColor;
     fullscreenFlash.style.opacity='1';
     await new Promise(r=>setTimeout(r,1500));
@@ -1187,52 +1610,163 @@ async function capturePhoto(){
     await new Promise(r=>setTimeout(r,2000));
     fullscreenFlash.style.opacity='0';
   }
-  canvas.toBlob(b=>{if(b){downloadBlob(b,`photo_${Date.now()}.png`);showToast('Đã lưu ảnh')}},'image/png',.92);
+  savePhotoFromCanvas(canvas);
+
   restorePreviewResolution();
+  if(enteredFs){
+    try{
+      if(document.exitFullscreen) await document.exitFullscreen();
+      else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }catch(e){}
+  }
 }
 
-function startRecording(){
+
+function cancelRecDraw(){
+  try{
+    if(state.recAnimId != null){
+      if(typeof video.cancelVideoFrameCallback === 'function')
+        video.cancelVideoFrameCallback(state.recAnimId);
+      else
+        cancelAnimationFrame(state.recAnimId);
+    }
+  }catch(e){
+    try{ cancelAnimationFrame(state.recAnimId); }catch(e2){}
+  }
+  state.recAnimId = null;
+}
+
+async function startRecording(){
   if(!state.stream||state.isRecording||!video.videoWidth) return;
   const w=video.videoWidth,h=video.videoHeight;
   recCanvas.width=w;recCanvas.height=h;
-  const drawLoop=()=>{drawToCanvas(recCtx,w,h);state.recAnimId=requestAnimationFrame(drawLoop)};
-  drawLoop();
-  const canvasStream=recCanvas.captureStream(30);
-  const audioTracks=state.stream.getAudioTracks();
-  if(audioTracks.length) canvasStream.addTrack(audioTracks[0]);
+  // Bật cờ TRƯỚC vòng vẽ — nếu để sau, frame đầu thoát sớm và không bao giờ vẽ lại
+  state.isRecording=true;
+  const recFps = (state.previewFps > 0) ? state.previewFps : 30;
+  const useRvfc = typeof video.requestVideoFrameCallback === 'function';
+  const drawLoop = () => {
+    if(!state.isRecording) return;
+    try{ drawToCanvas(recCtx,w,h,'fast'); }catch(e){}
+    if(useRvfc){
+      state.recAnimId = video.requestVideoFrameCallback(drawLoop);
+    } else {
+      state.recAnimId = requestAnimationFrame(drawLoop);
+    }
+  };
+  // Vẽ 1 frame ngay để canvas không trống
+  try{ drawToCanvas(recCtx,w,h,'fast'); }catch(e){}
+  if(useRvfc) state.recAnimId = video.requestVideoFrameCallback(drawLoop);
+  else state.recAnimId = requestAnimationFrame(drawLoop);
+  const canvasStream=recCanvas.captureStream(recFps);
+  const audioTracks=state.stream.getAudioTracks().filter(t=>t.readyState==='live');
+  if(audioTracks.length){
+    const gainVal = Math.min(100, Math.max(1, parseFloat(state.micGain) || 2));
+    try{
+      const actx = new (window.AudioContext || window.webkitAudioContext)();
+      if(actx.state === 'suspended') await actx.resume();
+      const src = actx.createMediaStreamSource(new MediaStream([audioTracks[0]]));
+      const gNode = actx.createGain();
+      // setValueAtTime để chắc chắn áp dụng ngay
+      gNode.gain.setValueAtTime(gainVal, actx.currentTime);
+      const dest = actx.createMediaStreamDestination();
+      src.connect(gNode);
+      gNode.connect(dest);
+      const outTrack = dest.stream.getAudioTracks()[0];
+      if(outTrack){
+        outTrack.enabled = true;
+        canvasStream.addTrack(outTrack);
+        state._recAudioCtx = actx;
+        state._recGainNode = gNode;
+      } else {
+        canvasStream.addTrack(audioTracks[0]);
+        try{ actx.close(); }catch(e){}
+      }
+    }catch(e){
+      console.warn('Mic gain fallback', e);
+      canvasStream.addTrack(audioTracks[0]);
+    }
+  }
   state.recordedChunks=[];
-  const mimeCandidates = [
-    'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
-    'video/mp4',
-    'video/webm;codecs=vp9,opus',
-    'video/webm;codecs=vp8,opus',
-    'video/webm'
-  ];
+  let mimeCandidates;
+  const vf = state.videoFmt || 'webm';
+  if(vf === 'mp4'){
+    mimeCandidates = [
+      'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+      'video/mp4',
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm'
+    ];
+  } else {
+    mimeCandidates = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+      'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+      'video/mp4'
+    ];
+  }
   let mime = '';
   for(const t of mimeCandidates){
     if(MediaRecorder.isTypeSupported(t)){ mime = t; break; }
   }
-  if(!mime){showToast('Trình duyệt không hỗ trợ quay video');cancelAnimationFrame(state.recAnimId);return}
-  try{state.mediaRecorder=new MediaRecorder(canvasStream,{mimeType:mime,videoBitsPerSecond:2500000})}
-  catch(e){showToast('Không thể quay video');cancelAnimationFrame(state.recAnimId);return}
-  state.mediaRecorder.ondataavailable=e=>{if(e.data?.size)state.recordedChunks.push(e.data)};
+  if(!mime){showToast('Trình duyệt không hỗ trợ quay video');cancelRecDraw();return}
+  // Bitrate động: theo độ phân giải × FPS (bits-per-pixel)
+  // Công thức: w*h*fps*bpp — cân bằng nét và dung lượng
+  const fps = Math.max(15, Math.min(60, recFps || 30));
+  const px = w * h;
+  let bpp = 0.11; // VP8/VP9 web ổn định
+  if(mime.includes('vp9')) bpp = 0.10;
+  else if(mime.includes('avc1') || mime.includes('mp4')) bpp = 0.13;
+  let vBit = Math.round(px * fps * bpp);
+  // Giới hạn an toàn theo độ phân giải
+  const minBit = px >= 1920*1000 ? 4000000 : (px >= 1280*700 ? 2000000 : 1000000);
+  const maxBit = px >= 1920*1000 ? 12000000 : (px >= 1280*700 ? 8000000 : 4000000);
+  vBit = Math.max(minBit, Math.min(maxBit, vBit));
+  const aBit = 192000;
+  try{
+    state.mediaRecorder=new MediaRecorder(canvasStream,{
+      mimeType:mime,
+      videoBitsPerSecond:vBit,
+      audioBitsPerSecond:aBit
+    });
+  }catch(e){
+    try{ state.mediaRecorder=new MediaRecorder(canvasStream,{mimeType:mime,videoBitsPerSecond:vBit}); }
+    catch(e2){ showToast('Không thể quay video');cancelRecDraw();return; }
+  }
+  state.mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size>0)state.recordedChunks.push(e.data)};
+  state.mediaRecorder.onerror=e=>{ console.warn('MediaRecorder error', e); showToast('Lỗi quay video'); };
   state.mediaRecorder.onstop=()=>{
-    cancelAnimationFrame(state.recAnimId);
-    const blob=new Blob(state.recordedChunks,{type:mime});
-    const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+    cancelRecDraw();
+    try{ state._recAudioCtx && state._recAudioCtx.close(); }catch(e){}
+    state._recAudioCtx = null;
+    state._recGainNode = null;
+    const blob=new Blob(state.recordedChunks,{type:mime||'video/webm'});
+    const ext = (mime||'').includes('mp4') ? 'mp4' : 'webm';
+    if(!blob.size){
+      showToast('Video trống — thử quay lại');
+      state.recordedChunks=[];
+      return;
+    }
     downloadBlob(blob, `video_${Date.now()}.${ext}`);
     showToast('Đã lưu video (.' + ext + ')');
     state.recordedChunks=[];
   };
-  state.mediaRecorder.start(200);
-  state.isRecording=true;shutter.classList.add('recording');
+  state.mediaRecorder.start(250);
+  shutter.classList.add('recording');
   recTimerEl.classList.add('recording');recTimerEl.style.display='block';startRecTimer();
   document.getElementById('app').classList.add('recording-active');
   closeAllMenus();
 }
 function stopRecording(){
   if(!state.isRecording||!state.mediaRecorder) return;
-  state.mediaRecorder.stop();state.isRecording=false;
+  state.isRecording=false;
+  try{
+    if(state.mediaRecorder.state === 'recording' || state.mediaRecorder.state === 'paused'){
+      try{ state.mediaRecorder.requestData(); }catch(e){}
+      state.mediaRecorder.stop();
+    }
+  }catch(e){ console.warn(e); }
   shutter.classList.remove('recording');
   recTimerEl.classList.remove('recording');recTimerEl.style.display='none';stopRecTimer();
   document.getElementById('app').classList.remove('recording-active');
@@ -1250,6 +1784,8 @@ function startRecTimer(){
 }
 function stopRecTimer(){clearInterval(recInterval);recInterval=null}
 
+
+
 /* ===== Mic level meter (Web Audio) ===== */
 let micAudioCtx = null;
 let micAnalyser = null;
@@ -1266,36 +1802,45 @@ function startMicMeter(){
     micAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
     micSource = micAudioCtx.createMediaStreamSource(new MediaStream([track]));
     micAnalyser = micAudioCtx.createAnalyser();
-    micAnalyser.fftSize = 256;
+    micAnalyser.fftSize = 128;
     micAnalyser.smoothingTimeConstant = 0.6;
     micSource.connect(micAnalyser);
     // không connect destination → không phát loa, không feedback
     micMeter.classList.add('show');
     const data = new Uint8Array(micAnalyser.fftSize);
+    let smooth = 0;
     const loop = () => {
       if(!micAnalyser) return;
       micAnalyser.getByteTimeDomainData(data);
-      // RMS
-      let sum = 0;
+      let sum = 0, peak = 0;
       for(let i = 0; i < data.length; i++){
         const v = (data[i] - 128) / 128;
+        const a = Math.abs(v);
         sum += v * v;
+        if(a > peak) peak = a;
       }
       const rms = Math.sqrt(sum / data.length);
-      // scale: 0~0.02 im lặng, 0.25+ rất to
-      let level = Math.min(1, rms * 4.5);
-      micBar.style.width = (level * 100) + '%';
-      if(level < 0.35) micBar.style.background = '#34c759';
-      else if(level < 0.65) micBar.style.background = '#ff9500';
+      // dB gần đúng: im lặng ~-50dB, nói chuyện ~-20dB, to ~-5dB
+      const db = 20 * Math.log10(Math.max(rms, 1e-6));
+      // map -50..-5 → 0..1, nhân gain hiển thị
+      let level = (db + 50) / 45;
+      level = Math.max(0, Math.min(1, level));
+      level = Math.min(1, level * (state.micGain || 1));
+      // làm mượt + phản ứng peak nhẹ
+      const target = Math.max(level, peak * 0.85 * Math.min(1.2, state.micGain || 1));
+      smooth = smooth * 0.72 + Math.min(1, target) * 0.28;
+      micBar.style.width = (smooth * 100) + '%';
+      if(smooth < 0.4) micBar.style.background = '#34c759';
+      else if(smooth < 0.72) micBar.style.background = '#ff9500';
       else micBar.style.background = '#ff3b30';
-      micRaf = requestAnimationFrame(loop);
+      micRaf = setTimeout(loop, 100); // ~10Hz
     };
-    micRaf = requestAnimationFrame(loop);
+    micRaf = setTimeout(loop, 100);
   }catch(e){ console.warn('Mic meter', e); }
 }
 
 function stopMicMeter(){
-  if(micRaf){ cancelAnimationFrame(micRaf); micRaf = null; }
+  if(micRaf){ clearTimeout(micRaf); try{cancelAnimationFrame(micRaf)}catch(e){}; micRaf = null; }
   try{ micSource && micSource.disconnect(); }catch(e){}
   try{ micAnalyser && micAnalyser.disconnect(); }catch(e){}
   try{ micAudioCtx && micAudioCtx.close(); }catch(e){}
@@ -1305,6 +1850,23 @@ function stopMicMeter(){
 }
 
 
+
+function resetAdjustmentsForQR(){
+  state.timerSec = 0;
+  state.ev = 0; state.sat = 1; state.temp = 0; state.filter = 'none';
+  document.querySelectorAll('.timer-opt').forEach(o=>o.classList.toggle('active', o.dataset.sec==='0'));
+  if(timerBtn) timerBtn.classList.remove('active');
+  document.querySelectorAll('.filter-item').forEach(x=>x.classList.remove('selected'));
+  const noneF = document.querySelector('.filter-item[data-filter="none"]');
+  if(noneF) noneF.classList.add('selected');
+  const evS = document.getElementById('ev-slider');
+  const satS = document.getElementById('sat-slider');
+  const tempS = document.getElementById('temp-slider');
+  if(evS) evS.value = 0;
+  if(satS) satS.value = 1;
+  if(tempS) tempS.value = 0;
+  applyFilters();
+}
 async function setMode(mode){
   if(state.isRecording){showToast('Hãy dừng quay video trước');return}
   if(mode === state.mode) return;
@@ -1315,6 +1877,9 @@ async function setMode(mode){
   await new Promise(r => setTimeout(r, 120));
   state.mode=mode;
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  updateModePill();
+  document.body.classList.toggle('mode-qr', mode==='qr');
+  if(mode==='qr'){ closeAllMenus(); resetAdjustmentsForQR(); }
 
   if(mode==='video'){
     shutter.classList.add('video-mode');
@@ -1341,8 +1906,8 @@ async function setMode(mode){
     }
   }
   updateShutterColor();
-  const modeNames={photo:'Chụp ảnh',video:'Quay',qr:'Quét QR'};
-  if(modeNames[mode]) showToast(modeNames[mode]);
+  const modeNames={photo:'Chụp ảnh',video:'Quay Video',qr:'Quét QR'};
+  if(modeNames[mode]) showModeHint(modeNames[mode]);
   requestAnimationFrame(() => {
     setTimeout(() => cameraFrame.classList.remove('mode-switching'), 80);
   });
@@ -1455,8 +2020,6 @@ document.querySelectorAll('.timer-opt').forEach(opt=>{
     opt.classList.add('active');
     state.timerSec=parseInt(opt.dataset.sec,10);
     timerBtn.classList.toggle('active',state.timerSec>0);
-    timerMenu.classList.remove('show');
-    if(state.timerSec>0) showToast('Hẹn giờ '+state.timerSec+' giây');
   });
 });
 
@@ -1467,6 +2030,7 @@ aspectBtn.addEventListener('click',()=>{
   state.forceAspect=order[i];
   aspectBtn.textContent=state.forceAspect;
   adjustAspectRatio();
+  savePersistedSettings();
 });
 
 // EV
@@ -1519,8 +2083,8 @@ document.getElementById('reset-btn').addEventListener('click', e => {
   showToast('Đã khôi phục mặc định');
 });
 
-flipVBtn.addEventListener('click',()=>{state.flipV=!state.flipV;applyVideoTransform()});
-flipHBtn.addEventListener('click',()=>{state.flipH=!state.flipH;applyVideoTransform()});
+flipVBtn.addEventListener('click',()=>{state.flipV=!state.flipV;applyVideoTransform();savePersistedSettings();});
+flipHBtn.addEventListener('click',()=>{state.flipH=!state.flipH;applyVideoTransform();savePersistedSettings();});
 
 // Fullscreen
 const fsBtn = document.getElementById('fs-btn');
@@ -1626,12 +2190,12 @@ function applyFont(id){
 function openSettings(){
   closeAllMenus();
   if(setPreviewRes) setPreviewRes.value = state.previewRes || '1280x720';
-  if(setCaptureRes) setCaptureRes.value = state.captureRes || '1920x1080';
-  if(setPreviewFps) setPreviewFps.value = String(state.previewFps || 30);
+    if(setPreviewFps) setPreviewFps.value = String(state.previewFps === 0 ? 0 : (state.previewFps || 30));
   const setFont = document.getElementById('set-font');
   if(setFont) setFont.value = document.documentElement.getAttribute('data-font') || 'system';
   try{ video.pause(); }catch(e){}
   settingsOverlay.classList.add('show');
+  refreshDeviceLists();
 }
 function closeSettings(){
   settingsOverlay.classList.remove('show');
@@ -1648,7 +2212,7 @@ document.querySelectorAll('.settings-nav-item[data-panel]').forEach(btn=>{
     const panel = document.getElementById('panel-'+id);
     if(panel) panel.classList.add('active');
     const title = document.getElementById('settings-title');
-    if(title) title.textContent = id === 'general' ? 'Chung' : 'Camera';
+    if(title) title.textContent = ({general:'Chung',micro:'Mic',devices:'Thiết bị',camera:'Camera',about:'Giới thiệu'})[id] || 'Camera';
   });
 });
 
@@ -1659,43 +2223,134 @@ if(settingsOverlay) settingsOverlay.addEventListener('click', e=>{
 
 async function applyPreviewSettings(){
   state.previewRes = setPreviewRes.value;
-  state.previewFps = parseInt(setPreviewFps.value, 10) || 30;
-  state.captureRes = setCaptureRes.value;
+  state.previewFps = parseInt(setPreviewFps.value, 10); if(isNaN(state.previewFps)) state.previewFps = 30;
+  state.captureRes = state.previewRes;
   const hadAudio = state.stream?.getAudioTracks().some(t=>t.readyState==='live');
+  // Buộc mở lại cam với constraint mới
+  if(state.stream){
+    state.stream.getTracks().forEach(t=>{ try{t.stop()}catch(e){} });
+    state.stream=null;
+    state._fpsRunning=false;
+  }
   await startCamera(!!hadAudio && state.mode==='video');
-  showToast('Đã áp dụng cài đặt camera');
+  try{ await video.play(); }catch(e){}
+  await waitForVideoFrame(1500);
+  savePersistedSettings();
+  
 }
 if(setPreviewRes) setPreviewRes.addEventListener('change', applyPreviewSettings);
 if(setPreviewFps) setPreviewFps.addEventListener('change', applyPreviewSettings);
-if(setCaptureRes) setCaptureRes.addEventListener('change', ()=>{
-  state.captureRes = setCaptureRes.value;
-  showToast('Độ phân giải chụp: '+setCaptureRes.options[setCaptureRes.selectedIndex].text);
-});
+(function(){
+  const setPhotoFmt = document.getElementById('set-photo-fmt');
+  const setVideoFmt = document.getElementById('set-video-fmt');
+  try{
+    const pf = localStorage.getItem('webcam-photo-fmt');
+    const vf = localStorage.getItem('webcam-video-fmt');
+    if(pf) state.photoFmt = pf;
+    if(vf) state.videoFmt = vf;
+  }catch(e){}
+  if(setPhotoFmt) setPhotoFmt.addEventListener('change', ()=>{
+    state.photoFmt = setPhotoFmt.value || 'png';
+    savePersistedSettings();
+    
+  });
+  if(setVideoFmt) setVideoFmt.addEventListener('change', ()=>{
+    state.videoFmt = setVideoFmt.value || 'webm';
+    savePersistedSettings();
+    
+  });
+})();
+
 const setFontEl = document.getElementById('set-font');
 if(setFontEl) setFontEl.addEventListener('change', ()=>{
   applyFont(setFontEl.value);
-  showToast(setFontEl.value === 'inter' ? 'Font: Inter' : 'Font: Hệ thống');
+  savePersistedSettings();
+  
 });
+const setMicGain = document.getElementById('set-mic-gain');
+if(setMicGain){
+  try{
+    const g = localStorage.getItem('webcam-mic-gain');
+    if(g){ state.micGain = parseFloat(g)||1; setMicGain.value = String(state.micGain); }
+  }catch(e){}
+  setMicGain.addEventListener('change', ()=>{
+    state.micGain = parseFloat(setMicGain.value)||2;
+    savePersistedSettings();
+    
+  });
+}
+const setPersistEl = document.getElementById('set-persist');
+if(setPersistEl) setPersistEl.addEventListener('change', ()=>{
+  state.persistSettings = !!setPersistEl.checked;
+  try{
+    localStorage.setItem('webcam-persist-on', state.persistSettings ? '1' : '0');
+    if(state.persistSettings) savePersistedSettings();
+    else localStorage.removeItem(PERSIST_KEY);
+  }catch(e){}
+  
+});
+const btnFactory = document.getElementById('btn-factory-reset');
+if(btnFactory) btnFactory.addEventListener('click', ()=>{
+  if(!confirm('Khôi phục toàn bộ cài đặt về mặc định?')) return;
+  try{
+    localStorage.removeItem('webcam-font');
+    localStorage.removeItem('webcam-mic-gain');
+    localStorage.removeItem('webcam-photo-fmt');
+    localStorage.removeItem('webcam-video-fmt');
+    localStorage.removeItem(PERSIST_KEY);
+    localStorage.removeItem('webcam-persist-on');
+    sessionStorage.clear();
+  }catch(e){}
+  location.reload();
+});
+
 try{
   const saved = localStorage.getItem('webcam-font');
   if(saved) applyFont(saved);
 }catch(e){}
 
+function waitForVideoFrame(timeoutMs=1200){
+  return new Promise(resolve=>{
+    const done = () => resolve();
+    if(!video || video.readyState < 2){
+      let n=0;
+      const t=setInterval(()=>{
+        if(video.readyState>=2 && video.videoWidth>0){ clearInterval(t); finish(); }
+        else if(++n>24){ clearInterval(t); done(); }
+      },50);
+      return;
+    }
+    function finish(){
+      if(typeof video.requestVideoFrameCallback === 'function'){
+        video.requestVideoFrameCallback(()=>done());
+      } else setTimeout(done, 80);
+    }
+    finish();
+    setTimeout(done, timeoutMs);
+  });
+}
 async function boostCaptureResolution(){
   const track = state.stream?.getVideoTracks()?.[0];
   if(!track) return false;
-  const cr = state.captureRes || '1920x1080';
+  const cr = state.previewRes || '1280x720';
+  const preview = state.previewRes || '1280x720';
+  // Cùng mức preview → không cần đổi constraint (tránh đen khung)
+  if(cr !== 'max' && cr === preview) return false;
   try{
     if(cr === 'max'){
       const caps = track.getCapabilities?.() || {};
       const w = caps.width?.max || 1920;
       const h = caps.height?.max || 1080;
+      const settings = track.getSettings?.() || {};
+      if(settings.width >= w*0.9 && settings.height >= h*0.9) return false;
       await track.applyConstraints({ width: { ideal: w }, height: { ideal: h } });
     } else {
       const [w,h] = cr.split('x').map(Number);
+      const settings = track.getSettings?.() || {};
+      if(Math.abs((settings.width||0)-w)<40 && Math.abs((settings.height||0)-h)<40) return false;
       await track.applyConstraints({ width: { ideal: w }, height: { ideal: h } });
     }
-    await new Promise(r=>setTimeout(r, 200));
+    await waitForVideoFrame(1500);
     return true;
   }catch(e){ console.warn('boost capture', e); return false; }
 }
@@ -1707,13 +2362,128 @@ async function restorePreviewResolution(){
     await track.applyConstraints({
       width: { ideal: w },
       height: { ideal: h },
-      frameRate: { ideal: state.previewFps||30 }
+      frameRate: (state.previewFps > 0) ? { ideal: state.previewFps } : { ideal: 60 }
     });
+    await waitForVideoFrame(800);
   }catch(e){}
 }
 
-if(navigator.mediaDevices?.getUserMedia) startCamera(false);
-else{noCamera.classList.remove('hidden');showToast('Trình duyệt không hỗ trợ camera')}
+
+/* Tooltip: trái→hiện phải, phải→hiện trái; trượt */
+(function(){
+  const tip = document.createElement('div');
+  tip.className = 'app-tip from-left';
+  document.body.appendChild(tip);
+  let hideT = null;
+  function hideTip(){
+    tip.classList.remove('show');
+  }
+  function bindTip(el){
+    const text = el.getAttribute('title') || el.getAttribute('data-tip');
+    if(!text) return;
+    el.setAttribute('data-tip', text);
+    el.removeAttribute('title');
+    el.addEventListener('mouseenter', ()=>{
+      clearTimeout(hideT);
+      const r = el.getBoundingClientRect();
+      const inLeft = !!el.closest('.left-controls');
+      const inRight = !!el.closest('.right-controls');
+      tip.textContent = text;
+      tip.classList.remove('show','from-left','from-right');
+      const gap = 10;
+      if(inRight){
+        tip.classList.add('from-right');
+        tip.style.left = (r.left - gap) + 'px';
+        tip.style.top = (r.top + r.height/2) + 'px';
+      } else {
+        // mặc định / cột trái: hiện bên phải nút
+        tip.classList.add('from-left');
+        tip.style.left = (r.right + gap) + 'px';
+        tip.style.top = (r.top + r.height/2) + 'px';
+      }
+      requestAnimationFrame(()=> tip.classList.add('show'));
+    });
+    el.addEventListener('mouseleave', ()=>{ hideT = setTimeout(hideTip, 50); });
+  }
+  document.querySelectorAll('[title], [data-tip]').forEach(bindTip);
+  window.__bindTip = bindTip;
+})();
+
+/* Mode pill trượt */
+function updateModePill(){
+  const pill = document.getElementById('mode-pill');
+  const sw = document.querySelector('.mode-switcher');
+  const active = document.querySelector('.mode-btn.active');
+  if(!pill || !sw || !active) return;
+  const sr = sw.getBoundingClientRect();
+  const ar = active.getBoundingClientRect();
+  pill.style.top = (ar.top - sr.top) + 'px';
+}
+
+
+async function refreshDeviceLists(){
+  const vSel = document.getElementById('set-video-device');
+  const aSel = document.getElementById('set-audio-device');
+  if(!vSel || !aSel || !navigator.mediaDevices?.enumerateDevices) return;
+  try{
+    const list = await navigator.mediaDevices.enumerateDevices();
+    const vids = list.filter(d=>d.kind==='videoinput');
+    const auds = list.filter(d=>d.kind==='audioinput');
+    const curV = state.videoDeviceId || '';
+    const curA = state.audioDeviceId || '';
+    const fillSelect = (sel, devices, prefix, cur) => {
+      sel.textContent = '';
+      const opt0 = document.createElement('option');
+      opt0.value = '';
+      opt0.textContent = 'Mặc định';
+      sel.appendChild(opt0);
+      devices.forEach((d,i) => {
+        const o = document.createElement('option');
+        o.value = d.deviceId || '';
+        o.textContent = d.label || (prefix + ' ' + (i+1));
+        sel.appendChild(o);
+      });
+      sel.value = cur;
+    };
+    fillSelect(vSel, vids, 'Camera', curV);
+    fillSelect(aSel, auds, 'Mic', curA);
+  }catch(e){ console.warn(e); }
+}
+const setVideoDevice = document.getElementById('set-video-device');
+const setAudioDevice = document.getElementById('set-audio-device');
+if(setVideoDevice) setVideoDevice.addEventListener('change', async ()=>{
+  state.videoDeviceId = setVideoDevice.value || null;
+  const hadAudio = state.stream?.getAudioTracks().some(t=>t.readyState==='live');
+  if(state.stream){
+    state.stream.getTracks().forEach(t=>{ try{t.stop()}catch(e){} });
+    state.stream=null; state._fpsRunning=false;
+  }
+  await startCamera(!!hadAudio && state.mode==='video');
+  savePersistedSettings();
+  
+});
+if(setAudioDevice) setAudioDevice.addEventListener('change', async ()=>{
+  state.audioDeviceId = setAudioDevice.value || null;
+  if(state.mode==='video'){
+    if(state.stream){
+      state.stream.getTracks().forEach(t=>{ try{t.stop()}catch(e){} });
+      state.stream=null; state._fpsRunning=false;
+    }
+    await startCamera(true);
+  }
+  savePersistedSettings();
+  
+});
+
+loadPersistedSettings();
+updateModePill();
+window.addEventListener('resize', updateModePill);
+if(navigator.mediaDevices?.getUserMedia) startCamera(false).then(()=>{
+  applyVideoTransform();
+  if(aspectBtn) aspectBtn.textContent = state.forceAspect || '16:9';
+  adjustAspectRatio();
+});
+else{noCamera.classList.remove('hidden');showPermModal();}
 </script>
 </body>
 </html>
