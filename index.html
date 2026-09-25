@@ -503,13 +503,13 @@
       display:none;position:fixed;inset:0;z-index:400;
       background:#0a0a0a;flex-direction:column;
       color:#fff;font-family:inherit;
-      opacity:0;transform:translateY(12px) scale(.98);
-      transition:opacity .25s ease, transform .25s ease;
+      opacity:0;transform:scale(0.92);
+      transition:opacity .28s ease, transform .28s ease;
       pointer-events:auto;
     }
-    #library-overlay.show{display:flex !important;opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+    #library-overlay.show{display:flex !important;opacity:1;transform:scale(1);pointer-events:auto}
     #library-overlay.closing{
-      opacity:0;transform:translateY(12px) scale(.98);pointer-events:none;
+      opacity:0;transform:scale(0.92);pointer-events:none;
     }
     #library-overlay.show .lib-card{
       animation:libIn .22s ease both;
@@ -552,7 +552,6 @@
       border-radius:12px;padding:6px;flex-direction:column;gap:4px;
       box-shadow:0 8px 24px rgba(0,0,0,.4);
     }
-    .lib-layout-menu.show{display:flex}
     .lib-layout-menu button{
       border:none;background:transparent;color:rgba(255,255,255,.8);
       padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;text-align:left;
@@ -602,6 +601,52 @@
       pointer-events:none;
     }
     body.lib-selecting .lib-card .lib-check{display:block}
+    
+    body.lib-selecting .lib-back,
+    body.lib-selecting .lib-tabs,
+    body.lib-selecting #lib-help,
+    body.lib-selecting #lib-layout-btn,
+    body.lib-selecting #lib-layout-menu{display:none !important}
+    body.lib-selecting #lib-del-sel-btn{
+      display:flex !important;width:auto;min-width:72px;height:36px;border-radius:18px;
+      padding:0 16px;gap:6px;font-size:13px;font-weight:600;
+    }
+    body.lib-selecting #lib-del-sel-btn::after{content:'Xóa'}
+    body.lib-selecting #lib-del-sel-btn.show{display:flex !important}
+    .lib-card.selected{
+      transform:scale(0.88);
+      box-shadow:0 0 0 3px rgba(255,170,0,.55);
+      background:rgba(255,170,0,.22) !important;
+    }
+    .lib-card{transition:transform .15s ease, box-shadow .15s ease}
+    #lib-layout-btn.active{background:#ffaa00;color:#000}
+    .lib-layout-menu{
+      opacity:0;transform:scale(.92) translateY(-6px);
+      transition:opacity .18s ease, transform .18s ease;
+      pointer-events:none;
+    }
+    .lib-layout-menu.show{
+      display:flex;opacity:1;transform:scale(1) translateY(0);pointer-events:auto;
+    }
+    /* QR history cards */
+    #qr-hist-modal .lib-modal-box{max-width:480px;width:92vw;max-height:78vh}
+    #qr-hist-list{overflow:auto;max-height:52vh;margin:10px 0;text-align:left;display:flex;flex-direction:column;gap:10px}
+    .qr-hist-item{
+      padding:12px 12px 10px;border:1px solid rgba(255,255,255,.1);
+      border-radius:12px;background:rgba(255,255,255,.06);
+      font-size:13px;
+    }
+    .qr-hist-item .t{color:rgba(255,255,255,.45);font-size:11px;margin-bottom:6px}
+    .qr-hist-item .c{
+      word-break:break-all;color:rgba(255,255,255,.92);
+      background:rgba(0,0,0,.25);border-radius:8px;padding:8px 10px;margin-bottom:8px;
+    }
+    .qr-hist-item .copy-btn{
+      border:none;background:rgba(255,255,255,.1);color:#fff;
+      padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;
+    }
+    .qr-hist-item .copy-btn:hover{background:rgba(255,170,0,.35)}
+
     .lib-card.selected .lib-check{
       background:#ffaa00;border-color:#ffaa00;
       box-shadow:0 2px 10px rgba(255,170,0,.45);
@@ -1406,6 +1451,13 @@
             <select id="set-lang" disabled>
               <option value="vi">Tiếng Việt</option>
             </select>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="lab">Khởi động lại camera</div>
+              <div class="hint">Làm mới luồng cam / mic</div>
+            </div>
+            <button type="button" id="btn-restart-cam" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Khởi động lại</button>
           </div>
           <div class="settings-row">
             <div>
@@ -2658,13 +2710,11 @@ function openSettings(){
   if(genPanel) genPanel.classList.add('active');
   const title = document.getElementById('settings-title');
   if(title) title.textContent = 'Chung';
-  try{ video.pause(); }catch(e){}
   settingsOverlay.classList.add('show');
   refreshDeviceLists();
 }
 function closeSettings(){
   settingsOverlay.classList.remove('show');
-  try{ video.play(); }catch(e){}
 }
 if(settingsBtn) settingsBtn.addEventListener('click', e=>{ e.stopPropagation(); openSettings(); });
 
@@ -2753,6 +2803,17 @@ if(setPersistEl) setPersistEl.addEventListener('change', ()=>{
     else localStorage.removeItem(PERSIST_KEY);
   }catch(e){}
   
+});
+document.getElementById('btn-restart-cam')?.addEventListener('click', async ()=>{
+  try{
+    if(state.stream){
+      state.stream.getTracks().forEach(t=>{ try{t.stop()}catch(e){} });
+      state.stream = null;
+      state._fpsRunning = false;
+    }
+    await startCamera(state.mode === 'video');
+    showToast('Đã khởi động lại camera');
+  }catch(e){ showToast('Không khởi động lại được'); }
 });
 const btnFactory = document.getElementById('btn-factory-reset');
 if(btnFactory) btnFactory.addEventListener('click', async ()=>{
@@ -3129,8 +3190,15 @@ const libSelected = new Set();
 function updateLibDelBtn(){
   const b = document.getElementById('lib-del-sel-btn');
   if(!b) return;
-  if(libSelecting && libSelected.size > 0) b.classList.add('show');
+  if(libSelecting) b.classList.add('show');
   else b.classList.remove('show');
+  updateLibTitle();
+}
+function updateLibTitle(){
+  const t = document.querySelector('.lib-title');
+  if(!t) return;
+  if(libSelecting) t.textContent = 'Đã chọn ' + libSelected.size + ' mục';
+  else t.textContent = 'Thư viện';
 }
 function exitLibSelectMode(){
   libSelecting = false;
@@ -3139,6 +3207,7 @@ function exitLibSelectMode(){
   document.getElementById('lib-multi-btn')?.classList.remove('active');
   document.querySelectorAll('.lib-card.selected').forEach(c=>c.classList.remove('selected'));
   updateLibDelBtn();
+  updateLibTitle();
 }
 async function renderLibGrid(){
   const grid = document.getElementById('lib-grid');
@@ -3278,16 +3347,38 @@ function applyLibGridSize(size){
 }
 document.getElementById('lib-layout-btn')?.addEventListener('click', e=>{
   e.stopPropagation();
-  document.getElementById('lib-layout-menu')?.classList.toggle('show');
+  const menu = document.getElementById('lib-layout-menu');
+  const btn = document.getElementById('lib-layout-btn');
+  const willShow = !menu?.classList.contains('show');
+  if(willShow){
+    menu.style.display = 'flex';
+    void menu.offsetWidth;
+    menu.classList.add('show');
+    btn?.classList.add('active');
+  } else {
+    menu.classList.remove('show');
+    btn?.classList.remove('active');
+    setTimeout(()=>{ menu.style.display = ''; }, 180);
+  }
 });
 document.querySelectorAll('#lib-layout-menu button').forEach(b=>{
   b.addEventListener('click', e=>{
     e.stopPropagation();
     applyLibGridSize(b.dataset.size);
-    document.getElementById('lib-layout-menu')?.classList.remove('show');
+    const menu = document.getElementById('lib-layout-menu');
+    menu?.classList.remove('show');
+    document.getElementById('lib-layout-btn')?.classList.remove('active');
+    setTimeout(()=>{ if(menu) menu.style.display = ''; }, 180);
   });
 });
-document.addEventListener('click', ()=> document.getElementById('lib-layout-menu')?.classList.remove('show'));
+document.addEventListener('click', ()=>{
+  const menu = document.getElementById('lib-layout-menu');
+  if(menu?.classList.contains('show')){
+    menu.classList.remove('show');
+    document.getElementById('lib-layout-btn')?.classList.remove('active');
+    setTimeout(()=>{ menu.style.display = ''; }, 180);
+  }
+});
 applyLibGridSize(libGridSize);
 
 (function(){
@@ -3309,6 +3400,7 @@ document.getElementById('lib-multi-btn')?.addEventListener('click', e=>{
   if(libSelecting){
     btn?.classList.add('active');
     document.body.classList.add('lib-selecting');
+    updateLibTitle();
   } else {
     exitLibSelectMode();
   }
@@ -3491,14 +3583,27 @@ function renderQrHistory(){
     box.innerHTML = '<div class="qr-hist-empty">Chưa có lịch sử quét</div>';
     return;
   }
-  box.innerHTML = list.map(it=>{
+  box.innerHTML = '';
+  list.forEach((it,i)=>{
     const d = new Date(it.at);
     const pad = n=>String(n).padStart(2,'0');
     const t = pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+' '+pad(d.getHours())+':'+pad(d.getMinutes());
-    return '<div class="qr-hist-item"><div class="t">'+t+'</div><div class="c"></div></div>';
-  }).join('');
-  [...box.querySelectorAll('.qr-hist-item .c')].forEach((el,i)=>{
-    el.textContent = list[i].text;
+    const row = document.createElement('div');
+    row.className = 'qr-hist-item';
+    const timeEl = document.createElement('div'); timeEl.className = 't'; timeEl.textContent = t;
+    const contentEl = document.createElement('div'); contentEl.className = 'c'; contentEl.textContent = it.text;
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button'; copyBtn.className = 'copy-btn'; copyBtn.textContent = 'Sao chép';
+    copyBtn.addEventListener('click', async ()=>{
+      try{
+        await navigator.clipboard.writeText(it.text);
+        showToast('Đã sao chép');
+      }catch(e){
+        try{ qrResult.value = it.text; qrResult.select(); document.execCommand('copy'); showToast('Đã sao chép'); }catch(e2){}
+      }
+    });
+    row.appendChild(timeEl); row.appendChild(contentEl); row.appendChild(copyBtn);
+    box.appendChild(row);
   });
 }
 function openQrHistory(){
