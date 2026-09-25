@@ -746,13 +746,17 @@
     .ld-nav svg{width:18px;height:18px}
     .ld-nav:disabled{opacity:.3;cursor:default}
     .ld-stage{
-      flex:1;max-width:min(920px,100%);height:100%;
+      flex:1;max-width:min(1100px,96%);height:100%;
       display:flex;align-items:center;justify-content:center;
-      border-radius:16px;overflow:hidden;background:transparent;
+      border-radius:0;overflow:visible;background:transparent;
     }
     .ld-stage img,.ld-stage video{
-      max-width:100%;max-height:100%;object-fit:contain;border-radius:12px;
-      transform-origin:center center;transition:transform .05s linear;
+      max-width:100%;max-height:100%;object-fit:contain;border-radius:0;
+      transform-origin:center center;
+      -webkit-user-drag:none;user-select:none;pointer-events:auto;
+    }
+    .ld-stage img{
+      touch-action:none;
     }
     .ld-stage.can-zoom{cursor:grab}
     .ld-stage.zooming{cursor:grabbing}
@@ -3590,17 +3594,26 @@ function renderLibDetail(){
   stage.classList.toggle('can-zoom', it.type==='photo');
   if(it.type==='photo'){
     const img = document.createElement('img');
-    img.src = url; img.style.transform = 'translate(0,0) scale(1)'; img.style.transformOrigin='center center';
+    img.src = url;
+    img.alt = '';
+    img.draggable = false;
+    img.setAttribute('draggable', 'false');
+    img.style.transform = 'translate(0,0) scale(1)';
+    img.style.transformOrigin = 'center center';
+    img.style.webkitUserDrag = 'none';
+    img.style.userSelect = 'none';
+    img.addEventListener('dragstart', e=>{ e.preventDefault(); return false; });
+    img.addEventListener('contextmenu', e=>{ e.preventDefault(); });
     stage.appendChild(img);
   } else {
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;max-width:100%;max-height:100%';
     const v = document.createElement('video');
     v.src = url; v.controls = true; v.playsInline = true;
     v.disablePictureInPicture = true;
+    // Chỉ chặn tải qua control; tốc độ phát dùng menu sẵn của trình phát
     v.setAttribute('controlsList', 'nodownload noremoteplayback');
-    v.style.maxWidth = '100%'; v.style.maxHeight = 'calc(100% - 36px)';
-    // Sửa duration WebM sai trên Chrome
+    v.style.maxWidth = '100%'; v.style.maxHeight = '100%';
+    v.style.borderRadius = '0';
+    v.addEventListener('contextmenu', e=>{ e.preventDefault(); });
     const storedDur = it.duration || 0;
     v.addEventListener('loadedmetadata', function onMeta(){
       if(v.duration === Infinity || !isFinite(v.duration) || (storedDur > 2 && v.duration < storedDur * 0.5)){
@@ -3611,24 +3624,7 @@ function renderLibDetail(){
         });
       }
     });
-    const rateRow = document.createElement('div');
-    rateRow.style.cssText = 'display:flex;gap:6px;align-items:center;font-size:12px;color:rgba(255,255,255,.7)';
-    rateRow.innerHTML = '<span>Tốc độ</span>';
-    [0.5, 0.75, 1, 1.25, 1.5, 2].forEach(r=>{
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = r + 'x';
-      b.style.cssText = 'border:none;padding:4px 8px;border-radius:8px;font-size:12px;cursor:pointer;background:rgba(255,255,255,.1);color:#fff';
-      if(r===1) b.style.background = '#ffaa00'; b.style.color = r===1 ? '#000' : '#fff';
-      b.addEventListener('click', ()=>{
-        v.playbackRate = r;
-        rateRow.querySelectorAll('button').forEach(x=>{ x.style.background='rgba(255,255,255,.1)'; x.style.color='#fff'; });
-        b.style.background = '#ffaa00'; b.style.color = '#000';
-      });
-      rateRow.appendChild(b);
-    });
-    wrap.appendChild(v); wrap.appendChild(rateRow);
-    stage.appendChild(wrap);
+    stage.appendChild(v);
   }
   document.getElementById('ld-prev').disabled = libDetailIdx <= 0;
   document.getElementById('ld-next').disabled = libDetailIdx >= libItems.length-1;
@@ -3864,7 +3860,7 @@ document.getElementById('ld-next')?.addEventListener('click', ()=>{
 })();
 
 
-/* Zoom + pan ảnh trong thư viện */
+/* Zoom + pan ảnh thư viện — chặn kéo lưu ra ngoài */
 (function(){
   const stage = document.getElementById('ld-stage');
   if(!stage) return;
@@ -3877,37 +3873,52 @@ document.getElementById('ld-next')?.addEventListener('click', ()=>{
     stage.style.cursor = libViewZoom > 1.05 ? (dragging ? 'grabbing' : 'grab') : 'default';
   }
   window.__libResetPan = ()=>{ panX=0; panY=0; };
+  // Chặn drag-to-save toàn stage
+  stage.addEventListener('dragstart', e=>{ e.preventDefault(); return false; });
+  stage.addEventListener('contextmenu', e=>{
+    if(e.target.closest('img')) e.preventDefault();
+  });
   stage.addEventListener('wheel', e=>{
     if(!document.getElementById('library-detail')?.classList.contains('show')) return;
     const media = stage.querySelector('img');
     if(!media) return;
     e.preventDefault();
-    const prev = libViewZoom;
     libViewZoom = Math.min(5, Math.max(1, libViewZoom + (e.deltaY < 0 ? 0.15 : -0.15)));
     if(libViewZoom <= 1.01){ panX = 0; panY = 0; }
     applyImgTransform(media);
   }, {passive:false});
   stage.addEventListener('pointerdown', e=>{
     const media = stage.querySelector('img');
-    if(!media || libViewZoom <= 1.05) return;
+    if(!media) return;
+    // Luôn chặn native drag ảnh
+    e.preventDefault();
+    if(libViewZoom <= 1.05) return;
     dragging = true;
     sx = e.clientX; sy = e.clientY; ox = panX; oy = panY;
-    stage.setPointerCapture(e.pointerId);
+    try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+    stage.classList.add('zooming');
     applyImgTransform(media);
   });
   stage.addEventListener('pointermove', e=>{
     if(!dragging) return;
+    e.preventDefault();
     const media = stage.querySelector('img');
     if(!media) return;
     panX = ox + (e.clientX - sx);
     panY = oy + (e.clientY - sy);
-    const max = 200 * libViewZoom;
+    const max = 280 * libViewZoom;
     panX = Math.max(-max, Math.min(max, panX));
     panY = Math.max(-max, Math.min(max, panY));
     applyImgTransform(media);
   });
-  stage.addEventListener('pointerup', e=>{ dragging = false; applyImgTransform(stage.querySelector('img')); });
-  stage.addEventListener('pointercancel', ()=>{ dragging = false; });
+  function endDrag(){
+    dragging = false;
+    stage.classList.remove('zooming');
+    applyImgTransform(stage.querySelector('img'));
+  }
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+  stage.addEventListener('lostpointercapture', endDrag);
 })();
 
 
