@@ -311,10 +311,10 @@
 
     /* Bộ lọc panel */
     #filter-panel{
-      display:flex;position:fixed;z-index:60;flex-direction:column;gap:8px;
-      background:rgba(30,30,32,.92);border-radius:16px;padding:10px 12px 12px;
+      display:flex;position:fixed;z-index:60;flex-direction:column;gap:12px;
+      background:rgba(30,30,32,.92);border-radius:18px;padding:14px 16px 16px;
       box-shadow:0 12px 40px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.16);
-      width:148px;
+      width:176px;
       opacity:0;visibility:hidden;pointer-events:none;
       transform:translateX(-8px);
       transition:opacity .18s ease,visibility .18s,transform .18s ease;
@@ -324,18 +324,18 @@
       transform:translateX(0);
     }
     .filter-grid{
-      display:grid;grid-template-columns:repeat(2,1fr);gap:8px 8px;
+      display:grid;grid-template-columns:repeat(2,1fr);gap:12px 10px;
     }
     .filter-item{
-      display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;
+      display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;
       border:none;background:transparent;color:#fff;padding:0;
     }
     .filter-item .thumb{
-      width:52px;height:52px;border-radius:10px;border:2px solid transparent;
+      width:68px;height:68px;border-radius:14px;border:2px solid transparent;
       overflow:hidden;transition:transform .1s ease;
     }
     .filter-item.selected .thumb, .filter-item:hover .thumb{border-color:#fff;transform:scale(1.03)}
-    .filter-item .fname{font-size:10px;color:rgba(255,255,255,.75);font-weight:500}
+    .filter-item .fname{font-size:11px;color:rgba(255,255,255,.75);font-weight:500}
 
     #timer-menu{
       display:flex;position:fixed;z-index:60;
@@ -1350,7 +1350,7 @@
           <div class="settings-row">
             <div>
               <div class="lab">Khử tiếng ồn</div>
-              <div class="hint">noiseSuppression + lọc tần số khi quay</div>
+              <div class="hint">Trong quá trình phát triển, có thể xảy ra lỗi hoặc không tương thích hoặc đơn giản là không có tác dụng</div>
             </div>
             <label class="switch">
               <input type="checkbox" id="set-noise-reduce">
@@ -1371,9 +1371,12 @@
               <option value="50">50×</option>
             </select>
           </div>
-          <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:10px">
-            <div class="lab">Đo mức micro</div>
-            <div id="settings-mic-meter" style="width:100%;height:14px;border-radius:7px;background:rgba(255,255,255,.1);overflow:hidden">
+          <div class="settings-row" style="align-items:center;gap:12px">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.9">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+            </svg>
+            <div id="settings-mic-meter" style="flex:1;height:14px;border-radius:7px;background:rgba(255,255,255,.1);overflow:hidden">
               <div id="settings-mic-bar" style="height:100%;width:0%;border-radius:7px;background:#34c759;transition:width .08s linear"></div>
             </div>
           </div>
@@ -1401,7 +1404,6 @@
           <div class="settings-row">
             <div>
               <div class="lab">Định dạng ảnh</div>
-              <div class="hint">AVIF/WebP nhẹ hơn; không hỗ trợ sẽ dùng PNG</div>
             </div>
             <select id="set-photo-fmt">
               <option value="png">PNG</option>
@@ -1412,19 +1414,22 @@
           <div class="settings-row">
             <div>
               <div class="lab">Định dạng video</div>
-              <div class="hint">Tùy trình duyệt; ưu tiên lựa chọn của bạn</div>
             </div>
             <select id="set-video-fmt">
               <option value="webm">WebM</option>
               <option value="mp4">MP4</option>
             </select>
           </div>
+          <div style="padding:4px 0 12px;display:flex;flex-direction:column;gap:8px">
+            <a href="https://www.google.com/search?q=so+s%C3%A1nh+webM+v%C3%A0+MP4" target="_blank" rel="noopener noreferrer" style="color:#0a84ff;text-decoration:underline;font-size:13px">so sánh webM và MP4</a>
+            <a href="https://www.google.com/search?q=so+s%C3%A1nh+WebP%2C+AVIF+v%C3%A0+PNG" target="_blank" rel="noopener noreferrer" style="color:#0a84ff;text-decoration:underline;font-size:13px">so sánh WebP, AVIF và PNG</a>
+          </div>
         </div>
         <div class="settings-panel" id="panel-camera">
           <div class="settings-row">
             <div>
               <div class="lab">Độ phân giải</div>
-              <div class="hint">Áp dụng khi xem trước, quay video, quét QR (Ảnh hưởng đến hiệu suất)</div>
+              <div class="hint">Áp dụng khi xem trước, quay video, quét QR (Ảnh hưởng tới hiệu suất và FPS)</div>
             </div>
             <select id="set-preview-res">
               <option value="640x480">480p</option>
@@ -1443,6 +1448,11 @@
               <option value="60">60 FPS</option>
               <option value="0">Không giới hạn</option>
             </select>
+          </div>
+          <div class="settings-section-label">Thông tin</div>
+          <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px;border-bottom:none">
+            <div class="info-row" style="font-size:13px;color:rgba(255,255,255,.75)">FPS trung bình: <span id="cam-info-fps" style="color:#fff">—</span></div>
+            <div class="info-row" style="font-size:13px;color:rgba(255,255,255,.75)">Độ phân giải: <span id="cam-info-res" style="color:#fff">—</span></div>
           </div>
         </div>
 
@@ -1489,19 +1499,19 @@
           </div>
           <div class="settings-row">
             <div>
-              <div class="lab">Khởi động lại camera</div>
-              <div class="hint">Làm mới luồng cam / mic</div>
-            </div>
-            <button type="button" id="btn-restart-cam" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Khởi động lại</button>
-          </div>
-          <div class="settings-row">
-            <div>
               <div class="lab">Lưu lại các cài đặt</div>
             </div>
             <label class="switch">
               <input type="checkbox" id="set-persist" checked>
               <span class="switch-slider"></span>
             </label>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="lab">Làm mới camera</div>
+              <div class="hint">Làm mới luồng cam / mic</div>
+            </div>
+            <button type="button" id="btn-restart-cam" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Làm mới</button>
           </div>
           <div class="settings-row" style="border-bottom:none;padding-top:8px">
             <div>
@@ -2854,6 +2864,7 @@ document.querySelectorAll('.settings-nav-item[data-panel]').forEach(btn=>{
     if(title) title.textContent = ({general:'Chung',micro:'Mic',devices:'Thiết bị',camera:'Camera',about:'Giới thiệu'})[id] || 'Camera';
     if(id==='micro') startSettingsMicMeter();
     else stopSettingsMicMeter();
+    if(id==='camera') updateCamInfoPanel();
   });
 });
 
@@ -3528,7 +3539,7 @@ function showCenterPopup(msg){
   if(!el){
     el = document.createElement('div');
     el.id = 'center-popup';
-    el.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);z-index:500;background:#1c1c1e;color:#fff;padding:16px 28px;border-radius:14px;font-size:15px;font-weight:600;border:1px solid rgba(255,255,255,.14);box-shadow:0 12px 40px rgba(0,0,0,.5);opacity:0;transition:opacity .18s ease,transform .18s ease;pointer-events:none';
+    el.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);z-index:500;background:#ffaa00;color:#000;padding:16px 28px;border-radius:14px;font-size:15px;font-weight:700;border:none;box-shadow:0 12px 40px rgba(255,170,0,.45);opacity:0;transition:opacity .18s ease,transform .18s ease;pointer-events:none';
     document.body.appendChild(el);
   }
   el.textContent = msg;
@@ -3825,6 +3836,22 @@ document.getElementById('qr-hist-clear')?.addEventListener('click', ()=>{
     setTimeout(()=>{ m.style.display=''; }, 200);
   });
 })();
+
+
+function updateCamInfoPanel(){
+  const fpsEl = document.getElementById('cam-info-fps');
+  const resEl = document.getElementById('cam-info-res');
+  if(fpsEl){
+    const t = document.getElementById('fps')?.textContent || '';
+    const m = t.match(/(\d+)/);
+    fpsEl.textContent = m ? m[1] : '—';
+  }
+  if(resEl){
+    const w = video?.videoWidth || 0, h = video?.videoHeight || 0;
+    resEl.textContent = (w && h) ? (w + 'x' + h) : '—';
+  }
+}
+setInterval(updateCamInfoPanel, 1000);
 
 </script>
 </body>
