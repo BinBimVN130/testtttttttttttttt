@@ -1542,6 +1542,12 @@
       <button type="button" id="perm-ok">OK</button>
     </div>
   </div>
+  <div id="cam-setup-modal" class="lib-modal" style="display:none;z-index:600">
+    <div class="lib-modal-box" style="text-align:center;min-width:260px">
+      <h3 style="margin-bottom:8px">Đang thiết lập camera...</h3>
+      <p id="cam-setup-status" style="color:rgba(255,255,255,.55);font-size:13px;margin:0">Chuẩn bị</p>
+    </div>
+  </div>
   <div id="mobile-warn-modal" class="lib-modal">
     <div class="lib-modal-box">
       <h3>Thông báo</h3>
@@ -1877,49 +1883,75 @@ function adjustAspectRatio(){
   cameraFrame.style.height=Math.round(fh)+'px';
 }
 
-async function startCamera(withAudio=false){
+async function applyVideoQuality(track){
+  if(!track) return;
+  const [pw, ph] = (state.previewRes || '1280x720').split('x').map(Number);
+  const pfps = (state.previewFps > 0) ? state.previewFps : 60;
+  const caps = track.getCapabilities?.() || {};
+  const c = {};
+  let tw = pw, th = ph;
+  if(caps.width?.max) tw = Math.min(pw, caps.width.max);
+  if(caps.height?.max) th = Math.min(ph, caps.height.max);
+  if(caps.width?.min) tw = Math.max(tw, caps.width.min);
+  if(caps.height?.min) th = Math.max(th, caps.height.min);
+  c.width = { ideal: tw };
+  c.height = { ideal: th };
+  if(caps.frameRate){
+    let f = pfps;
+    if(caps.frameRate.max) f = Math.min(f, caps.frameRate.max);
+    if(caps.frameRate.min) f = Math.max(f, caps.frameRate.min);
+    c.frameRate = { ideal: f };
+  } else {
+    c.frameRate = { ideal: pfps };
+  }
+  try{ await track.applyConstraints(c); }catch(e){
+    try{ await track.applyConstraints({ width:{ideal:tw}, height:{ideal:th} }); }catch(e2){}
+  }
+}
+async function startCamera(withAudio=false, forceRestart=false){
   try{
-    // Đã có video live và không cần thêm audio → giữ nguyên
-    if(state.stream && !withAudio){
-      const liveVid = state.stream.getVideoTracks().some(t=>t.readyState==='live');
-      if(liveVid){
-        noCamera.classList.add('hidden');
-        return;
+    if(!forceRestart){
+      if(state.stream && !withAudio){
+        const liveVid = state.stream.getVideoTracks().some(t=>t.readyState==='live');
+        if(liveVid){
+          noCamera.classList.add('hidden');
+          return;
+        }
       }
-    }
-    // Cần audio nhưng đã có video+audio live → giữ
-    if(state.stream && withAudio){
-      const liveVid = state.stream.getVideoTracks().some(t=>t.readyState==='live');
-      const liveAud = state.stream.getAudioTracks().some(t=>t.readyState==='live');
-      if(liveVid && liveAud){
-        noCamera.classList.add('hidden');
-        return;
+      if(state.stream && withAudio){
+        const liveVid = state.stream.getVideoTracks().some(t=>t.readyState==='live');
+        const liveAud = state.stream.getAudioTracks().some(t=>t.readyState==='live');
+        if(liveVid && liveAud){
+          noCamera.classList.add('hidden');
+          return;
+        }
       }
     }
 
-    // Dừng stream cũ trước khi mở mới
     if(state.stream){
       state.stream.getTracks().forEach(t=>{ try{t.stop()}catch(e){} });
       state.stream=null;
       state._fpsRunning = false;
     }
+    try{ video.srcObject = null; }catch(e){}
 
     const [pw, ph] = (state.previewRes || '1280x720').split('x').map(Number);
     const pfps = (state.previewFps === 0 || state.previewFps) ? state.previewFps : 30;
+    const wantFps = (pfps && pfps > 0) ? pfps : 60;
+
+    // Ưu tiên độ phân giải cao: advanced từ cao → thấp
+    const advanced = [];
+    if(pw >= 1920) advanced.push({ width: 1920, height: 1080, frameRate: wantFps });
+    if(pw >= 1280) advanced.push({ width: 1280, height: 720, frameRate: wantFps });
+    advanced.push({ width: pw, height: ph, frameRate: wantFps });
+    advanced.push({ width: 640, height: 480, frameRate: wantFps });
+
     const videoConstraint = {
       width: { ideal: pw },
-      height: { ideal: ph }
+      height: { ideal: ph },
+      frameRate: { ideal: wantFps },
+      advanced
     };
-    // Chỉ dùng ideal (không min) để browser không hạ FPS ép
-    if(pfps && pfps > 0){
-      videoConstraint.frameRate = { ideal: pfps };
-    } else {
-      videoConstraint.frameRate = { ideal: 60 };
-      videoConstraint.advanced = [
-        { frameRate: { ideal: 60 } },
-        { frameRate: { ideal: 30 } }
-      ];
-    }
     if(state.videoDeviceId){
       videoConstraint.deviceId = { exact: state.videoDeviceId };
     } else {
@@ -1937,33 +1969,50 @@ async function startCamera(withAudio=false){
         ? { deviceId: { exact: state.audioDeviceId }, ...baseAud }
         : baseAud;
     }
-    state.stream = await navigator.mediaDevices.getUserMedia({
-      video: videoConstraint,
-      audio: audioConstraint
-    });
-    // Ép FPS cao nhất cam cho phép (trong giới hạn setting)
     try{
-      const vtrack = state.stream.getVideoTracks()[0];
-      const caps = vtrack.getCapabilities?.() || {};
-      const settings = vtrack.getSettings?.() || {};
-      if(caps.frameRate){
-        const maxF = caps.frameRate.max || 60;
-        const want = (pfps && pfps > 0) ? Math.min(pfps, maxF) : maxF;
-        if(!settings.frameRate || Math.abs(settings.frameRate - want) > 1){
-          await vtrack.applyConstraints({ frameRate: { ideal: want } });
-        }
+      state.stream = await navigator.mediaDevices.getUserMedia({
+        video: videoConstraint,
+        audio: audioConstraint
+      });
+    }catch(e1){
+      // Fallback nhẹ hơn nếu constraint quá chặt
+      const soft = {
+        width: { ideal: pw },
+        height: { ideal: ph },
+        frameRate: { ideal: wantFps }
+      };
+      if(state.videoDeviceId) soft.deviceId = { exact: state.videoDeviceId };
+      else soft.facingMode = state.facingMode;
+      state.stream = await navigator.mediaDevices.getUserMedia({
+        video: soft,
+        audio: audioConstraint
+      });
+    }
+    const vtrack = state.stream.getVideoTracks()[0];
+    try{ await applyVideoQuality(vtrack); }catch(e){}
+    // Nếu vẫn thấp hơn mục tiêu → applyConstraints lần 2
+    try{
+      const s = vtrack.getSettings?.() || {};
+      if((s.width||0) < pw * 0.85 || (s.height||0) < ph * 0.85){
+        await vtrack.applyConstraints({
+          width: { ideal: pw, min: Math.min(640, pw) },
+          height: { ideal: ph, min: Math.min(480, ph) },
+          frameRate: { ideal: wantFps }
+        });
       }
-    }catch(e){ console.warn('apply fps', e); }
+    }catch(e){}
     video.srcObject = state.stream;
     video.muted = true;
     video.playsInline = true;
     await new Promise(r=>{ if(video.readyState>=2) r(); else video.onloadedmetadata=()=>r(); });
     await video.play();
+    await waitForVideoFrame(500);
     noCamera.classList.add('hidden');
     requestAnimationFrame(()=>{ adjustAspectRatio(); setTimeout(adjustAspectRatio, 150); });
     startFpsCounter();
     if(state.mode === 'video') startMicMeter();
     if(typeof refreshDeviceLists === 'function') refreshDeviceLists();
+    if(typeof updateCamInfoPanel === 'function') updateCamInfoPanel();
   }catch(e){
     console.error(e);
     noCamera.classList.remove('hidden');
@@ -2878,7 +2927,6 @@ async function applyPreviewSettings(){
   state.previewFps = parseInt(setPreviewFps.value, 10); if(isNaN(state.previewFps)) state.previewFps = 30;
   state.captureRes = state.previewRes;
   const hadAudio = state.stream?.getAudioTracks().some(t=>t.readyState==='live');
-  // Chụp 1 frame "ảo" rồi bỏ — kích hoạt pipeline trước khi đổi constraint
   try{
     if(video.videoWidth){
       const c = document.createElement('canvas');
@@ -2887,28 +2935,38 @@ async function applyPreviewSettings(){
       await new Promise(r=> c.toBlob(()=>r(), 'image/jpeg', 0.1));
     }
   }catch(e){}
-  if(state.stream){
-    state.stream.getTracks().forEach(t=>{ try{t.stop()}catch(e){} });
-    state.stream=null;
-    state._fpsRunning=false;
-  }
-  try{ video.srcObject = null; }catch(e){}
-  await new Promise(r=>setTimeout(r, 200));
-  await startCamera(!!hadAudio && state.mode==='video');
+  await startCamera(!!hadAudio && state.mode==='video', true);
   try{ await video.play(); }catch(e){}
-  await waitForVideoFrame(1200);
-  // applyConstraints thêm lần nữa
+  await waitForVideoFrame(800);
   try{
     const track = state.stream?.getVideoTracks()?.[0];
     if(track){
-      const [w,h] = (state.previewRes||'1280x720').split('x').map(Number);
-      await track.applyConstraints({
-        width: { ideal: w }, height: { ideal: h },
-        frameRate: state.previewFps > 0 ? { ideal: state.previewFps } : { ideal: 60 }
-      });
-      await waitForVideoFrame(600);
+      await applyVideoQuality(track);
+      await waitForVideoFrame(400);
     }
   }catch(e){}
+  // Đồng bộ dropdown với độ phân giải THỰC nếu lệch nhiều
+  const aw = video.videoWidth || 0, ah = video.videoHeight || 0;
+  if(aw && ah){
+    const actual = aw + 'x' + ah;
+    const opts = [...(setPreviewRes?.options || [])].map(o=>o.value);
+    // map gần nhất
+    let best = opts[0] || actual;
+    let bestDist = 1e15;
+    opts.forEach(v=>{
+      const [w,h] = v.split('x').map(Number);
+      const d = Math.abs(w*h - aw*ah);
+      if(d < bestDist){ bestDist = d; best = v; }
+    });
+    // nếu thực tế gần một option khác với lựa chọn → cảnh báo nhưng giữ lựa chọn user
+    const [tw,th] = (state.previewRes||'').split('x').map(Number);
+    if(tw && (aw < tw*0.85 || ah < th*0.85)){
+      showToast('Cam thực tế: ' + aw + 'x' + ah + ' (không đạt ' + state.previewRes + ')');
+    } else {
+      showToast('Đã áp dụng: ' + aw + 'x' + ah);
+    }
+  }
+  updateCamInfoPanel();
   savePersistedSettings();
 }
 if(setPreviewRes) setPreviewRes.addEventListener('change', applyPreviewSettings);
@@ -3131,12 +3189,78 @@ if(setAudioDevice) setAudioDevice.addEventListener('change', async ()=>{
 loadPersistedSettings();
 updateModePill();
 window.addEventListener('resize', updateModePill);
-if(navigator.mediaDevices?.getUserMedia) startCamera(false).then(()=>{
-  applyVideoTransform();
-  if(aspectBtn) aspectBtn.textContent = state.forceAspect || '16:9';
-  adjustAspectRatio();
-});
-else{noCamera.classList.remove('hidden');showPermModal();}
+
+async function bootCameraSetup(){
+  const modal = document.getElementById('cam-setup-modal');
+  const status = document.getElementById('cam-setup-status');
+  function setStatus(t){ if(status) status.textContent = t; }
+  function showSetup(){
+    if(!modal) return;
+    modal.style.display = 'flex';
+    void modal.offsetWidth;
+    modal.classList.add('show');
+  }
+  function hideSetup(){
+    if(!modal) return;
+    modal.classList.remove('show');
+    setTimeout(()=>{ modal.style.display = 'none'; }, 220);
+  }
+  if(!navigator.mediaDevices?.getUserMedia){
+    noCamera.classList.remove('hidden');
+    showPermModal();
+    return;
+  }
+  showSetup();
+  try{
+    // 1. Đọc cài đặt độ phân giải / FPS đã lưu
+    const res = state.previewRes || '1280x720';
+    const fps = state.previewFps > 0 ? state.previewFps : 30;
+    setStatus('Độ phân giải ' + res.replace('x','×') + ' · ' + (state.previewFps > 0 ? state.previewFps + ' FPS' : 'Không giới hạn'));
+    await new Promise(r=>setTimeout(r, 200));
+
+    // 2. Mở camera theo setting
+    setStatus('Đang mở camera...');
+    await startCamera(false, true);
+    await waitForVideoFrame(600);
+
+    // 3. Chụp 1 tấm nhanh (không lưu) để kích hoạt pipeline
+    setStatus('Hiệu chỉnh độ phân giải...');
+    try{
+      if(video.videoWidth){
+        const c = document.createElement('canvas');
+        const [tw, th] = res.split('x').map(Number);
+        c.width = Math.min(video.videoWidth, tw || 1280);
+        c.height = Math.min(video.videoHeight, th || 720);
+        c.getContext('2d').drawImage(video, 0, 0, c.width, c.height);
+        await new Promise(r=> c.toBlob(()=>r(), 'image/jpeg', 0.5));
+      }
+    }catch(e){}
+
+    // 4. Làm mới camera lần 2
+    setStatus('Làm mới camera...');
+    await startCamera(false, true);
+    try{
+      const track = state.stream?.getVideoTracks()?.[0];
+      if(track && typeof applyVideoQuality === 'function') await applyVideoQuality(track);
+    }catch(e){}
+    await waitForVideoFrame(500);
+
+    // 5. Hiện khung hình
+    setStatus('Hoàn tất');
+    applyVideoTransform();
+    if(aspectBtn) aspectBtn.textContent = state.forceAspect || '16:9';
+    adjustAspectRatio();
+    if(typeof updateCamInfoPanel === 'function') updateCamInfoPanel();
+    await new Promise(r=>setTimeout(r, 250));
+  }catch(e){
+    console.error('bootCameraSetup', e);
+    noCamera.classList.remove('hidden');
+    try{ showPermModal(); }catch(e2){}
+  }finally{
+    hideSetup();
+  }
+}
+bootCameraSetup();
 
 /* ===== IndexedDB Library ===== */
 const LIB_DB = 'webcam-library';
@@ -3841,14 +3965,28 @@ document.getElementById('qr-hist-clear')?.addEventListener('click', ()=>{
 function updateCamInfoPanel(){
   const fpsEl = document.getElementById('cam-info-fps');
   const resEl = document.getElementById('cam-info-res');
+  const track = state.stream?.getVideoTracks()?.find(t=>t.readyState==='live');
+  const settings = track?.getSettings?.() || {};
+  if(resEl){
+    const w = video?.videoWidth || settings.width || 0;
+    const h = video?.videoHeight || settings.height || 0;
+    resEl.textContent = (w && h) ? (w + 'x' + h) : '—';
+  }
   if(fpsEl){
+    // FPS cam từ track (khớp setting) + FPS render nếu có
+    let camFps = settings.frameRate ? Math.round(settings.frameRate) : null;
     const t = document.getElementById('fps')?.textContent || '';
     const m = t.match(/(\d+)/);
-    fpsEl.textContent = m ? m[1] : '—';
-  }
-  if(resEl){
-    const w = video?.videoWidth || 0, h = video?.videoHeight || 0;
-    resEl.textContent = (w && h) ? (w + 'x' + h) : '—';
+    const renderFps = m ? parseInt(m[1],10) : null;
+    if(camFps && renderFps != null){
+      fpsEl.textContent = camFps + ' (hiển thị ' + renderFps + ')';
+    } else if(camFps){
+      fpsEl.textContent = String(camFps);
+    } else if(renderFps != null){
+      fpsEl.textContent = String(renderFps);
+    } else {
+      fpsEl.textContent = '—';
+    }
   }
 }
 setInterval(updateCamInfoPanel, 1000);
