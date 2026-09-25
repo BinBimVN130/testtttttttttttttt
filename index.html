@@ -408,6 +408,10 @@
     .app-tip.from-right.show{ opacity:1; transform:translate(-100%,-50%) translateX(0); }
     .app-tip.from-bottom{ transform:translate(-50%,0) translateY(6px); }
     .app-tip.from-bottom.show{ opacity:1; transform:translate(-50%,0) translateY(0); }
+    .app-tip.from-top{ transform:translate(-50%,0) translateY(-8px); }
+    .app-tip.from-top.show{ opacity:1; transform:translate(-50%,0) translateY(0); }
+    .app-tip.from-up{ transform:translate(-50%,-100%) translateY(4px); }
+    .app-tip.from-up.show{ opacity:1; transform:translate(-50%,-100%) translateY(-8px); }
 
     
     /* QR: ẩn bộ lọc, hẹn giờ, EV, bão hòa, nhiệt độ */
@@ -496,13 +500,14 @@
 
     /* Library overlay */
     #library-overlay{
-      display:none;position:fixed;inset:0;z-index:280;
+      display:none;position:fixed;inset:0;z-index:400;
       background:#0a0a0a;flex-direction:column;
       color:#fff;font-family:inherit;
       opacity:0;transform:translateY(12px) scale(.98);
       transition:opacity .25s ease, transform .25s ease;
+      pointer-events:auto;
     }
-    #library-overlay.show{display:flex;opacity:1;transform:translateY(0) scale(1)}
+    #library-overlay.show{display:flex !important;opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
     #library-overlay.closing{
       opacity:0;transform:translateY(12px) scale(.98);pointer-events:none;
     }
@@ -541,11 +546,27 @@
       position:relative;z-index:1;transition:color .18s ease;
     }
     .lib-tab.active{color:#000;background:transparent}
+    .lib-layout-menu{
+      display:none;position:absolute;top:58px;right:16px;z-index:5;
+      background:rgba(28,28,30,.96);border:1px solid rgba(255,255,255,.12);
+      border-radius:12px;padding:6px;flex-direction:column;gap:4px;
+      box-shadow:0 8px 24px rgba(0,0,0,.4);
+    }
+    .lib-layout-menu.show{display:flex}
+    .lib-layout-menu button{
+      border:none;background:transparent;color:rgba(255,255,255,.8);
+      padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;text-align:left;
+    }
+    .lib-layout-menu button:hover{background:rgba(255,255,255,.08)}
+    .lib-layout-menu button.active{background:#ffaa00;color:#000;font-weight:600}
     .lib-grid{
       flex:1;overflow:auto;padding:12px 16px 24px;
       display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
       gap:12px;align-content:start;
     }
+    .lib-grid.size-sm{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+    .lib-grid.size-md{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+    .lib-grid.size-lg{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
     .lib-card{
       aspect-ratio:16/9;border-radius:16px;overflow:hidden;position:relative;
       background:linear-gradient(145deg,#4a4a4a,#2e2e2e);cursor:pointer;
@@ -598,7 +619,7 @@
 
     /* Library detail */
     #library-detail{
-      display:none;position:fixed;inset:0;z-index:285;
+      display:none;position:fixed;inset:0;z-index:410;
       background:#0a0a0a;flex-direction:column;color:#fff;
       opacity:0;transform:translateX(16px);
       transition:opacity .2s ease, transform .2s ease;
@@ -615,11 +636,15 @@
     }
     .ld-actions{justify-self:end;grid-column:3}
     .ld-name-pill{
-      background:rgba(40,40,42,.95);border-radius:14px;padding:6px 16px;
-      text-align:center;max-width:70%;
+      background:rgba(40,40,42,.95);border-radius:14px;padding:8px 18px;
+      text-align:center;max-width:min(70vw,420px);
+      width:max-content;box-sizing:border-box;
     }
-    .ld-name-pill .nm{font-size:13px;font-weight:600}
-    .ld-name-pill .dt{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+    .ld-name-pill .nm{
+      font-size:13px;font-weight:600;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:min(60vw,380px);
+    }
+    .ld-name-pill .dt{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;white-space:nowrap}
     .ld-actions{display:flex;gap:8px}
     .ld-actions button{
       width:36px;height:36px;border-radius:50%;border:none;
@@ -633,21 +658,22 @@
       gap:10px;padding:8px 12px;min-height:0;
     }
     .ld-nav{
-      width:40px;height:40px;border-radius:20px;border:none;
+      width:36px;height:36px;border-radius:50%;border:none;
       background:rgba(255,255,255,.1);color:#fff;cursor:pointer;
       display:flex;align-items:center;justify-content:center;flex-shrink:0;
     }
+    .ld-nav svg{width:18px;height:18px}
     .ld-nav:disabled{opacity:.3;cursor:default}
     .ld-stage{
       flex:1;max-width:min(920px,100%);height:100%;
       display:flex;align-items:center;justify-content:center;
-      border-radius:16px;overflow:hidden;background:#1a1a1a;
+      border-radius:16px;overflow:hidden;background:transparent;
     }
     .ld-stage img,.ld-stage video{
       max-width:100%;max-height:100%;object-fit:contain;border-radius:12px;
       transform-origin:center center;transition:transform .05s linear;
     }
-    .ld-stage{overflow:hidden;cursor:grab}
+    .ld-stage.can-zoom{cursor:grab}
     .ld-stage.zooming{cursor:grabbing}
     .ld-film{
       flex-shrink:0;padding:10px 16px 16px;display:flex;gap:8px;
@@ -700,8 +726,10 @@
     /* Right */
     .right-controls{
       position:absolute;right:12px;top:50%;transform:translateY(-50%);
-      display:flex;flex-direction:column;align-items:center;gap:12px;z-index:30;
+      display:flex;flex-direction:column;align-items:center;gap:12px;z-index:50;
+      pointer-events:auto;
     }
+    .right-controls > *{pointer-events:auto}
     .mode-switcher{
       display:flex;flex-direction:column;gap:5px;
       background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);
@@ -1105,15 +1133,23 @@
         <button type="button" class="lib-icon-btn" id="lib-del-sel-btn" title="Xóa đã chọn" data-tip="Xóa đã chọn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
         </button>
+        <button type="button" class="lib-icon-btn" id="lib-layout-btn" title="Bố cục" data-tip="Bố cục">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+        </button>
         <button type="button" class="lib-icon-btn" id="lib-multi-btn" title="Chọn nhiều" data-tip="Chọn nhiều">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         </button>
         <button type="button" class="lib-icon-btn" id="lib-help" title="Lưu ý" data-tip="Lưu ý">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </button>
       </div>
     </div>
-    <div class="lib-grid" id="lib-grid"></div>
+    <div id="lib-layout-menu" class="lib-layout-menu">
+      <button type="button" data-size="sm">Nhỏ</button>
+      <button type="button" data-size="md" class="active">Trung bình</button>
+      <button type="button" data-size="lg">Lớn</button>
+    </div>
+    <div class="lib-grid size-md" id="lib-grid"></div>
   </div>
 
   <div id="library-detail">
@@ -1140,12 +1176,12 @@
       </div>
     </div>
     <div class="ld-main">
-      <button type="button" class="ld-nav" id="ld-prev">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      <button type="button" class="ld-nav" id="ld-prev" title="Trước" data-tip="Trước">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
       </button>
       <div class="ld-stage" id="ld-stage"></div>
-      <button type="button" class="ld-nav" id="ld-next">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <button type="button" class="ld-nav" id="ld-next" title="Sau" data-tip="Sau">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
       </button>
     </div>
     <div class="ld-film" id="ld-film"></div>
@@ -1259,7 +1295,6 @@
               <option value="10">10×</option>
               <option value="20">20×</option>
               <option value="50">50×</option>
-              <option value="100">100×</option>
             </select>
           </div>
         </div>
@@ -1788,9 +1823,9 @@ async function startCamera(withAudio=false){
     if(withAudio){
       const nr = state.noiseReduce === true;
       const baseAud = {
-        echoCancellation: nr,
-        noiseSuppression: nr,
-        autoGainControl: true
+        echoCancellation: nr ? true : false,
+        noiseSuppression: nr ? true : false,
+        autoGainControl: nr ? true : false
       };
       audioConstraint = state.audioDeviceId
         ? { deviceId: { exact: state.audioDeviceId }, ...baseAud }
@@ -3037,32 +3072,43 @@ async function resumeCamFromLibrary(){
   if(state.mode==='video') startMicMeter();
 }
 async function openLibrary(){
-  closeAllMenus();
-  pauseCamForLibrary();
-  exitLibSelectMode();
+  try{
+    closeAllMenus();
+  }catch(e){}
+  try{ pauseCamForLibrary(); }catch(e){}
+  try{ if(typeof exitLibSelectMode==='function') exitLibSelectMode(); }catch(e){}
   const ov = document.getElementById('library-overlay');
+  if(!ov){ console.error('library-overlay missing'); return; }
   ov.classList.remove('closing');
   ov.style.display = 'flex';
+  ov.style.opacity = '1';
+  ov.style.pointerEvents = 'auto';
   void ov.offsetWidth;
   ov.classList.add('show');
-  document.getElementById('library-detail').classList.remove('show');
-  // Giống người: vào Ảnh trước → rồi Tất cả (có pill trượt)
+  const det = document.getElementById('library-detail');
+  if(det) det.classList.remove('show');
   function setLibTab(filter){
     libFilter = filter;
     document.querySelectorAll('.lib-tab').forEach(t=>t.classList.remove('active'));
     const tab = document.querySelector('.lib-tab[data-filter="'+filter+'"]');
     if(tab) tab.classList.add('active');
-    updateLibTabPill();
+    try{ updateLibTabPill(); }catch(e){}
   }
-  setLibTab('photo');
-  await renderLibGrid();
-  updateAlbumThumb();
-  requestAnimationFrame(updateLibTabPill);
-  setTimeout(async ()=>{
-    setLibTab('all');
+  try{
+    setLibTab('photo');
     await renderLibGrid();
-    requestAnimationFrame(updateLibTabPill);
-  }, 380);
+    try{ updateAlbumThumb(); }catch(e){}
+    requestAnimationFrame(()=>{ try{ updateLibTabPill(); }catch(e){} });
+    setTimeout(async ()=>{
+      try{
+        setLibTab('all');
+        await renderLibGrid();
+        requestAnimationFrame(()=>{ try{ updateLibTabPill(); }catch(e){} });
+      }catch(e){ console.warn(e); }
+    }, 380);
+  }catch(e){
+    console.error('openLibrary', e);
+  }
 }
 function closeLibrary(){
   stopLibMediaElements();
@@ -3170,6 +3216,7 @@ function renderLibDetail(){
   const stage = document.getElementById('ld-stage');
   stage.innerHTML = '';
   const url = URL.createObjectURL(it.blob);
+  stage.classList.toggle('can-zoom', it.type==='photo');
   if(it.type==='photo'){
     const img = document.createElement('img');
     img.src = url; img.style.transform = 'scale(1)'; stage.appendChild(img);
@@ -3178,7 +3225,6 @@ function renderLibDetail(){
     v.src = url; v.controls = true; v.playsInline = true;
     v.disablePictureInPicture = true;
     v.setAttribute('controlsList', 'nodownload noplaybackrate noremoteplayback');
-    v.style.transform = 'scale(1)';
     stage.appendChild(v);
   }
   document.getElementById('ld-prev').disabled = libDetailIdx <= 0;
@@ -3216,7 +3262,45 @@ function showLibInfo(){
   im.style.display = 'flex'; void im.offsetWidth; im.classList.add('show');
 }
 
-document.getElementById('album-btn')?.addEventListener('click', e=>{ e.stopPropagation(); openLibrary(); });
+
+let libGridSize = localStorage.getItem('webcam-lib-size') || 'md';
+function applyLibGridSize(size){
+  libGridSize = size || 'md';
+  const grid = document.getElementById('lib-grid');
+  if(grid){
+    grid.classList.remove('size-sm','size-md','size-lg');
+    grid.classList.add('size-'+libGridSize);
+  }
+  document.querySelectorAll('#lib-layout-menu button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.size === libGridSize);
+  });
+  try{ localStorage.setItem('webcam-lib-size', libGridSize); }catch(e){}
+}
+document.getElementById('lib-layout-btn')?.addEventListener('click', e=>{
+  e.stopPropagation();
+  document.getElementById('lib-layout-menu')?.classList.toggle('show');
+});
+document.querySelectorAll('#lib-layout-menu button').forEach(b=>{
+  b.addEventListener('click', e=>{
+    e.stopPropagation();
+    applyLibGridSize(b.dataset.size);
+    document.getElementById('lib-layout-menu')?.classList.remove('show');
+  });
+});
+document.addEventListener('click', ()=> document.getElementById('lib-layout-menu')?.classList.remove('show'));
+applyLibGridSize(libGridSize);
+
+(function(){
+  const ab = document.getElementById('album-btn');
+  if(!ab) return;
+  ab.style.pointerEvents = 'auto';
+  ab.style.zIndex = '50';
+  ab.addEventListener('click', e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    openLibrary();
+  }, true);
+})();
 
 document.getElementById('lib-multi-btn')?.addEventListener('click', e=>{
   e.stopPropagation();
@@ -3341,9 +3425,9 @@ document.getElementById('ld-next')?.addEventListener('click', ()=>{
   if(!stage) return;
   stage.addEventListener('wheel', e=>{
     if(!document.getElementById('library-detail')?.classList.contains('show')) return;
-    e.preventDefault();
-    const media = stage.querySelector('img,video');
+    const media = stage.querySelector('img'); // chỉ ảnh
     if(!media) return;
+    e.preventDefault();
     libViewZoom = Math.min(5, Math.max(1, libViewZoom + (e.deltaY < 0 ? 0.15 : -0.15)));
     media.style.transform = 'scale('+libViewZoom+')';
   }, {passive:false});
@@ -3354,7 +3438,7 @@ document.getElementById('ld-next')?.addEventListener('click', ()=>{
   const tip = document.querySelector('.app-tip') || (function(){
     const t=document.createElement('div'); t.className='app-tip from-left'; document.body.appendChild(t); return t;
   })();
-  function bindBelow(el){
+  function bindLibTip(el){
     if(!el) return;
     const text = el.getAttribute('data-tip') || el.getAttribute('title');
     if(!text) return;
@@ -3362,16 +3446,25 @@ document.getElementById('ld-next')?.addEventListener('click', ()=>{
     el.addEventListener('mouseenter', ()=>{
       const r = el.getBoundingClientRect();
       tip.textContent = text;
-      tip.classList.remove('show','from-left','from-right','from-bottom');
-      tip.style.left = (r.left + r.width/2) + 'px';
-      tip.style.top = (r.bottom + 8) + 'px';
+      tip.classList.remove('show','from-left','from-right','from-bottom','from-top','from-up');
       tip.style.transform = '';
-      tip.classList.add('from-bottom');
+      const midY = window.innerHeight / 2;
+      if(r.top < midY){
+        // nút trên → tip trượt xuống (dưới nút)
+        tip.style.left = (r.left + r.width/2) + 'px';
+        tip.style.top = (r.bottom + 8) + 'px';
+        tip.classList.add('from-top');
+      } else {
+        // nút dưới → tip trượt lên (trên nút)
+        tip.style.left = (r.left + r.width/2) + 'px';
+        tip.style.top = r.top + 'px';
+        tip.classList.add('from-up');
+      }
       requestAnimationFrame(()=> tip.classList.add('show'));
     });
     el.addEventListener('mouseleave', ()=>{ tip.classList.remove('show'); });
   }
-  ['lib-back','lib-help','ld-back','ld-info','ld-download','ld-delete','qr-history-btn','lib-multi-btn','lib-del-sel-btn'].forEach(id=>bindBelow(document.getElementById(id)));
+  ['lib-back','lib-help','ld-back','ld-info','ld-download','ld-delete','qr-history-btn','lib-multi-btn','lib-del-sel-btn','lib-layout-btn','ld-prev','ld-next'].forEach(id=>bindLibTip(document.getElementById(id)));
 })();
 
 updateAlbumThumb();
