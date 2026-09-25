@@ -533,7 +533,8 @@
     .lib-top .lib-tabs{justify-self:center;grid-column:2}
     .lib-top .lib-icon-btn{justify-self:end;grid-column:3}
     .lib-back,.lib-icon-btn{
-      width:36px;height:36px;border-radius:50%;border:none;
+      width:36px;height:36px;border-radius:50%;
+      border:1.5px solid rgba(255,255,255,.35);
       background:rgba(255,255,255,.1);color:#fff;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
     }
@@ -1210,7 +1211,7 @@
     <div class="lib-top">
       <div class="lib-top-left">
         <button type="button" class="lib-back" id="lib-back" title="Quay lại" data-tip="Quay lại">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </button>
         <span class="lib-title">Thư viện</span>
       </div>
@@ -1227,7 +1228,8 @@
         <button type="button" class="lib-icon-btn" id="lib-del-sel-btn" title="Xóa vĩnh viễn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
         </button>
-        <button type="button" class="lib-icon-btn" id="lib-layout-btn" title="Bố cục" data-tip="Bố cục" style="width:auto;min-width:36px;padding:0 12px;border-radius:18px;font-size:12px;font-weight:600;gap:0">
+        <button type="button" class="lib-icon-btn" id="lib-layout-btn" title="Bố cục" data-tip="Bố cục" style="width:auto;min-width:36px;padding:0 12px;border-radius:18px;font-size:12px;font-weight:600;gap:6px;display:inline-flex;align-items:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
           <span id="lib-layout-label">Trung bình</span>
         </button>
         <button type="button" class="lib-icon-btn" id="lib-multi-btn" title="Chọn nhiều" data-tip="Chọn nhiều">
@@ -1249,7 +1251,7 @@
   <div id="library-detail">
     <div class="ld-top">
       <button type="button" class="lib-back" id="ld-back" title="Quay lại" data-tip="Quay lại">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
       <div class="ld-center">
         <div class="ld-name-pill">
@@ -1471,8 +1473,9 @@
           </div>
           <div class="settings-section-label">Thông tin</div>
           <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px;border-bottom:none">
-            <div class="info-row" style="font-size:13px;color:rgba(255,255,255,.75)">FPS trung bình: <span id="cam-info-fps" style="color:#fff">—</span></div>
+            <div class="info-row" style="font-size:13px;color:rgba(255,255,255,.75)">FPS: Đã chọn: <span id="cam-info-fps-want" style="color:#fff">—</span> | Đo được: <span id="cam-info-fps" style="color:#fff">—</span></div>
             <div class="info-row" style="font-size:13px;color:rgba(255,255,255,.75)">Độ phân giải: <span id="cam-info-res" style="color:#fff">—</span></div>
+            <div id="cam-info-warn" style="display:none;font-size:12px;color:#ffaa00;margin-top:2px"></div>
           </div>
         </div>
 
@@ -1528,8 +1531,7 @@
           </div>
           <div class="settings-row">
             <div>
-              <div class="lab">Làm mới camera</div>
-              <div class="hint">Làm mới luồng cam / mic</div>
+              <div class="lab">Làm mới luồng camera & micro</div>
             </div>
             <button type="button" id="btn-restart-cam" style="padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Làm mới</button>
           </div>
@@ -1564,7 +1566,7 @@
   </div>
   <div id="cam-setup-modal" class="lib-modal" style="display:none;z-index:600">
     <div class="lib-modal-box" style="text-align:center;min-width:280px;padding:28px 24px">
-      <h3 style="margin-bottom:14px;font-weight:600">Đang tải...</h3>
+      <h3 style="margin-bottom:14px;font-weight:600">Đang thiết lập...</h3>
       <div style="width:100%;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;margin-bottom:12px">
         <div id="cam-setup-bar" style="height:100%;width:8%;border-radius:3px;background:#ffaa00;transition:width .35s ease"></div>
       </div>
@@ -2945,6 +2947,9 @@ if(settingsOverlay) settingsOverlay.addEventListener('click', e=>{
   if(e.target === settingsOverlay) closeSettings();
 });
 
+function notifyApplied(ok){
+  try{ showToast(ok ? 'Đã áp dụng' : 'Đã xảy ra lỗi'); }catch(e){}
+}
 async function applyPreviewSettings(){
   state.previewRes = setPreviewRes.value;
   state.previewFps = parseInt(setPreviewFps.value, 10); if(isNaN(state.previewFps)) state.previewFps = 30;
@@ -2983,17 +2988,13 @@ async function applyPreviewSettings(){
     });
     // nếu thực tế gần một option khác với lựa chọn → cảnh báo nhưng giữ lựa chọn user
     const [tw,th] = (state.previewRes||'').split('x').map(Number);
-    if(tw && (aw < tw*0.85 || ah < th*0.85)){
-      showToast('Cam thực tế: ' + aw + 'x' + ah + ' (không đạt ' + state.previewRes + ')');
-    } else {
-      showToast('Đã áp dụng: ' + aw + 'x' + ah);
-    }
   }
   updateCamInfoPanel();
   savePersistedSettings();
+  notifyApplied(true);
 }
-if(setPreviewRes) setPreviewRes.addEventListener('change', applyPreviewSettings);
-if(setPreviewFps) setPreviewFps.addEventListener('change', applyPreviewSettings);
+if(setPreviewRes) setPreviewRes.addEventListener('change', ()=> applyPreviewSettings().catch(()=>notifyApplied(false)));
+if(setPreviewFps) setPreviewFps.addEventListener('change', ()=> applyPreviewSettings().catch(()=>notifyApplied(false)));
 (function(){
   const setPhotoFmt = document.getElementById('set-photo-fmt');
   const setVideoFmt = document.getElementById('set-video-fmt');
@@ -3006,11 +3007,13 @@ if(setPreviewFps) setPreviewFps.addEventListener('change', applyPreviewSettings)
   if(setPhotoFmt) setPhotoFmt.addEventListener('change', ()=>{
     state.photoFmt = setPhotoFmt.value || 'png';
     savePersistedSettings();
+    notifyApplied(true);
     
   });
   if(setVideoFmt) setVideoFmt.addEventListener('change', ()=>{
     state.videoFmt = setVideoFmt.value || 'webm';
     savePersistedSettings();
+    notifyApplied(true);
     
   });
 })();
@@ -3050,9 +3053,9 @@ document.getElementById('btn-restart-cam')?.addEventListener('click', async ()=>
       state.stream = null;
       state._fpsRunning = false;
     }
-    await startCamera(state.mode === 'video');
-    showToast('Đã khởi động lại camera');
-  }catch(e){ showToast('Không khởi động lại được'); }
+    await startCamera(true, true);
+    notifyApplied(true);
+  }catch(e){ notifyApplied(false); }
 });
 const btnFactory = document.getElementById('btn-factory-reset');
 if(btnFactory) btnFactory.addEventListener('click', async ()=>{
@@ -3247,7 +3250,7 @@ async function bootCameraSetup(){
 
     // 2. Mở camera theo setting
     setStatus('Đang mở camera...', 35);
-    await startCamera(false, true);
+    await startCamera(true, true);
     await waitForVideoFrame(600);
 
     // 3. Chụp 1 tấm nhanh (không lưu) để kích hoạt pipeline
@@ -3265,20 +3268,19 @@ async function bootCameraSetup(){
 
     // 4. Làm mới camera lần 2
     setStatus('Làm mới camera...', 80);
-    await startCamera(false, true);
+    await startCamera(true, true);
     try{
       const track = state.stream?.getVideoTracks()?.[0];
       if(track && typeof applyVideoQuality === 'function') await applyVideoQuality(track);
     }catch(e){}
     await waitForVideoFrame(500);
 
-    // 5. Hiện khung hình
-    setStatus('Hoàn tất', 100);
+    // 5. Hiện khung hình — đóng ngay khi 100%
+    setStatus('', 100);
     applyVideoTransform();
     if(aspectBtn) aspectBtn.textContent = state.forceAspect || '16:9';
     adjustAspectRatio();
     if(typeof updateCamInfoPanel === 'function') updateCamInfoPanel();
-    await new Promise(r=>setTimeout(r, 250));
   }catch(e){
     console.error('bootCameraSetup', e);
     noCamera.classList.remove('hidden');
@@ -3498,7 +3500,7 @@ async function renderLibGrid(){
   });
   grid.innerHTML = '';
   if(!list.length){
-    grid.innerHTML = '<div class="lib-empty">Chưa có tệp =))</div>';
+    grid.innerHTML = '<div class="lib-empty">Không có ảnh/video nào =((</div>';
     updateLibDelBtn();
     return;
   }
@@ -3994,28 +3996,34 @@ document.getElementById('qr-hist-clear')?.addEventListener('click', ()=>{
 
 function updateCamInfoPanel(){
   const fpsEl = document.getElementById('cam-info-fps');
+  const fpsWant = document.getElementById('cam-info-fps-want');
   const resEl = document.getElementById('cam-info-res');
+  const warnEl = document.getElementById('cam-info-warn');
   const track = state.stream?.getVideoTracks()?.find(t=>t.readyState==='live');
   const settings = track?.getSettings?.() || {};
+  const w = video?.videoWidth || settings.width || 0;
+  const h = video?.videoHeight || settings.height || 0;
   if(resEl){
-    const w = video?.videoWidth || settings.width || 0;
-    const h = video?.videoHeight || settings.height || 0;
     resEl.textContent = (w && h) ? (w + 'x' + h) : '—';
   }
+  if(fpsWant){
+    fpsWant.textContent = (state.previewFps > 0) ? String(state.previewFps) : 'Max';
+  }
   if(fpsEl){
-    // FPS cam từ track (khớp setting) + FPS render nếu có
     let camFps = settings.frameRate ? Math.round(settings.frameRate) : null;
     const t = document.getElementById('fps')?.textContent || '';
     const m = t.match(/(\d+)/);
     const renderFps = m ? parseInt(m[1],10) : null;
-    if(camFps && renderFps != null){
-      fpsEl.textContent = camFps + ' (hiển thị ' + renderFps + ')';
-    } else if(camFps){
-      fpsEl.textContent = String(camFps);
-    } else if(renderFps != null){
-      fpsEl.textContent = String(renderFps);
+    fpsEl.textContent = (renderFps != null) ? String(renderFps) : (camFps != null ? String(camFps) : '—');
+  }
+  if(warnEl){
+    const [tw, th] = (state.previewRes || '1280x720').split('x').map(Number);
+    if(w && h && tw && (w < tw * 0.85 || h < th * 0.85)){
+      warnEl.textContent = 'Cam thực tế: ' + w + 'x' + h + ' (không đạt ' + state.previewRes + ')';
+      warnEl.style.display = 'block';
     } else {
-      fpsEl.textContent = '—';
+      warnEl.textContent = '';
+      warnEl.style.display = 'none';
     }
   }
 }
