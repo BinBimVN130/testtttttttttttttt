@@ -453,6 +453,154 @@
       opacity:1;transform:translate(-50%,-50%) scale(1);
     }
 
+    
+    /* Album button */
+    #album-btn{
+      width:44px;height:36px;border-radius:10px;
+      border:2px solid rgba(255,255,255,.75);
+      background:rgba(255,255,255,.1);color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;padding:0;flex-shrink:0;
+      box-shadow:0 2px 8px rgba(0,0,0,.25);
+    }
+    #album-btn svg{width:20px;height:20px}
+    .recording-active #album-btn{display:none !important}
+
+    /* Library overlay */
+    #library-overlay{
+      display:none;position:fixed;inset:0;z-index:280;
+      background:#0a0a0a;flex-direction:column;
+      color:#fff;font-family:inherit;
+    }
+    #library-overlay.show{display:flex}
+    .lib-top{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px;gap:12px;flex-shrink:0;
+    }
+    .lib-top-left{display:flex;align-items:center;gap:10px}
+    .lib-back,.lib-icon-btn{
+      width:36px;height:36px;border-radius:50%;border:none;
+      background:rgba(255,255,255,.1);color:#fff;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .lib-back svg,.lib-icon-btn svg{width:18px;height:18px}
+    .lib-title{font-size:18px;font-weight:600}
+    .lib-tabs{
+      display:flex;background:rgba(255,255,255,.1);border-radius:20px;padding:3px;gap:2px;
+    }
+    .lib-tab{
+      border:none;background:transparent;color:rgba(255,255,255,.7);
+      padding:6px 16px;border-radius:16px;font-size:13px;font-weight:500;cursor:pointer;
+    }
+    .lib-tab.active{background:#fff;color:#000}
+    .lib-grid{
+      flex:1;overflow:auto;padding:12px 16px 24px;
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+      gap:12px;align-content:start;
+    }
+    .lib-card{
+      aspect-ratio:16/9;border-radius:14px;overflow:hidden;position:relative;
+      background:linear-gradient(145deg,#4a4a4a,#2e2e2e);cursor:pointer;
+      border:none;padding:0;color:#fff;
+    }
+    .lib-card img,.lib-card video{
+      width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;
+    }
+    .lib-card .ph{
+      position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      font-size:13px;font-weight:500;color:rgba(255,255,255,.85);
+    }
+    .lib-card .vid-meta{
+      position:absolute;left:8px;right:8px;bottom:8px;
+      display:flex;justify-content:space-between;align-items:center;
+      font-size:12px;text-shadow:0 1px 3px rgba(0,0,0,.6);
+    }
+    .lib-empty{
+      grid-column:1/-1;text-align:center;padding:48px 16px;
+      color:rgba(255,255,255,.45);font-size:14px;
+    }
+
+    /* Library detail */
+    #library-detail{
+      display:none;position:fixed;inset:0;z-index:285;
+      background:#0a0a0a;flex-direction:column;color:#fff;
+    }
+    #library-detail.show{display:flex}
+    .ld-top{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 14px;gap:10px;flex-shrink:0;
+    }
+    .ld-center{
+      flex:1;display:flex;flex-direction:column;align-items:center;
+      min-width:0;
+    }
+    .ld-name-pill{
+      background:rgba(40,40,42,.95);border-radius:14px;padding:6px 16px;
+      text-align:center;max-width:70%;
+    }
+    .ld-name-pill .nm{font-size:13px;font-weight:600}
+    .ld-name-pill .dt{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+    .ld-actions{display:flex;gap:8px}
+    .ld-actions button{
+      width:36px;height:36px;border-radius:50%;border:none;
+      background:rgba(255,255,255,.1);color:#fff;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .ld-actions button.danger{color:#ff453a}
+    .ld-actions svg{width:18px;height:18px}
+    .ld-main{
+      flex:1;display:flex;align-items:center;justify-content:center;
+      gap:10px;padding:8px 12px;min-height:0;
+    }
+    .ld-nav{
+      width:40px;height:40px;border-radius:20px;border:none;
+      background:rgba(255,255,255,.1);color:#fff;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .ld-nav:disabled{opacity:.3;cursor:default}
+    .ld-stage{
+      flex:1;max-width:min(920px,100%);height:100%;
+      display:flex;align-items:center;justify-content:center;
+      border-radius:16px;overflow:hidden;background:#1a1a1a;
+    }
+    .ld-stage img,.ld-stage video{
+      max-width:100%;max-height:100%;object-fit:contain;border-radius:12px;
+    }
+    .ld-film{
+      flex-shrink:0;padding:10px 16px 16px;display:flex;gap:8px;
+      overflow-x:auto;justify-content:center;
+    }
+    .ld-thumb{
+      width:48px;height:48px;border-radius:8px;border:2px solid transparent;
+      overflow:hidden;background:#333;cursor:pointer;padding:0;flex-shrink:0;
+    }
+    .ld-thumb.active{border-color:#fff}
+    .ld-thumb img,.ld-thumb video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+
+    /* Info / help / confirm modals */
+    .lib-modal{
+      display:none;position:fixed;inset:0;z-index:295;
+      background:rgba(0,0,0,.65);align-items:center;justify-content:center;padding:20px;
+    }
+    .lib-modal.show{display:flex}
+    .lib-modal-box{
+      background:#1c1c1e;border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;padding:22px 20px 16px;max-width:360px;width:100%;
+      box-shadow:0 16px 48px rgba(0,0,0,.5);
+    }
+    .lib-modal-box h3{font-size:16px;margin-bottom:10px;font-weight:600}
+    .lib-modal-box p,.lib-modal-box .info-row{
+      font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;margin-bottom:8px;
+    }
+    .lib-modal-box .info-row span{color:rgba(255,255,255,.45)}
+    .lib-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+    .lib-modal-actions button{
+      padding:8px 16px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;
+    }
+    .lib-modal-actions .btn-muted{background:rgba(255,255,255,.1);color:#fff}
+    .lib-modal-actions .btn-danger{background:rgba(255,59,48,.2);color:#ff6b63}
+    .lib-modal-actions .btn-ok{background:#ffaa00;color:#000}
+
     #toast{
       position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-10px);
       background:rgba(30,30,32,.95);color:#fff;padding:12px 20px;border-radius:14px;
@@ -841,8 +989,99 @@
         <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/>
       </svg>
     </button>
+    <button type="button" id="album-btn" title="Thư viện">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+    </button>
   </div>
 
+
+
+  <!-- Library -->
+  <div id="library-overlay">
+    <div class="lib-top">
+      <div class="lib-top-left">
+        <button type="button" class="lib-back" id="lib-back" title="Quay lại">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span class="lib-title">Thư viện</span>
+      </div>
+      <div class="lib-tabs">
+        <button type="button" class="lib-tab" data-filter="photo">Ảnh</button>
+        <button type="button" class="lib-tab active" data-filter="all">Tất cả</button>
+        <button type="button" class="lib-tab" data-filter="video">Video</button>
+      </div>
+      <button type="button" class="lib-icon-btn" id="lib-help" title="Lưu ý">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      </button>
+    </div>
+    <div class="lib-grid" id="lib-grid"></div>
+  </div>
+
+  <div id="library-detail">
+    <div class="ld-top">
+      <button type="button" class="lib-back" id="ld-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="ld-center">
+        <div class="ld-name-pill">
+          <div class="nm" id="ld-name">—</div>
+          <div class="dt" id="ld-date">—</div>
+        </div>
+      </div>
+      <div class="ld-actions">
+        <button type="button" id="ld-info" title="Thông tin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        </button>
+        <button type="button" id="ld-download" title="Tải xuống">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+        </button>
+        <button type="button" class="danger" id="ld-delete" title="Xóa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="ld-main">
+      <button type="button" class="ld-nav" id="ld-prev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="ld-stage" id="ld-stage"></div>
+      <button type="button" class="ld-nav" id="ld-next">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div class="ld-film" id="ld-film"></div>
+  </div>
+
+  <div class="lib-modal" id="lib-help-modal">
+    <div class="lib-modal-box">
+      <h3>Lưu ý</h3>
+      <p>Thư viện ảnh là một tính năng cho phép lưu ảnh trên trang web mà không cần tải về máy. Giới hạn: xóa dữ liệu site / đổi trình duyệt / chế độ ẩn danh → ảnh trong web có thể mất. Muốn giữ lâu thì Tải về.</p>
+      <div class="lib-modal-actions">
+        <button type="button" class="btn-ok" id="lib-help-close">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-modal" id="lib-info-modal">
+    <div class="lib-modal-box">
+      <h3>Thông tin tệp</h3>
+      <div id="lib-info-body"></div>
+      <div class="lib-modal-actions">
+        <button type="button" class="btn-ok" id="lib-info-close">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-modal" id="lib-del-modal">
+    <div class="lib-modal-box">
+      <h3>Xác nhận</h3>
+      <p id="lib-del-msg">Xóa vĩnh viễn ảnh/video này?</p>
+      <div class="lib-modal-actions">
+        <button type="button" class="btn-muted" id="lib-del-cancel">Hủy</button>
+        <button type="button" class="btn-danger" id="lib-del-ok">Xóa</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Settings -->
   <div id="settings-overlay">
@@ -888,6 +1127,16 @@
         
         
         <div class="settings-panel" id="panel-micro">
+          <div class="settings-row">
+            <div>
+              <div class="lab">Khử tiếng ồn</div>
+              <div class="hint">noiseSuppression + lọc tần số khi quay</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="set-noise-reduce" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
           <div class="settings-row">
             <div>
               <div class="lab">Khuếch đại micro</div>
@@ -1057,7 +1306,7 @@
 const state = {
   stream:null, mode:'photo', isRecording:false, mediaRecorder:null, recordedChunks:[],
   flipH:false, flipV:false, flashOn:false, flashColor:'#ffffff',
-  timerSec:0, isCounting:false, facingMode:'user', videoDeviceId:null, audioDeviceId:null, forceAspect:'16:9', previewRes:'1280x720', captureRes:'1280x720', previewFps:30, micGain:2, photoFmt:'png', videoFmt:'webm', persistSettings:true,
+  timerSec:0, isCounting:false, facingMode:'user', videoDeviceId:null, audioDeviceId:null, forceAspect:'16:9', previewRes:'1280x720', captureRes:'1280x720', previewFps:30, micGain:2, noiseReduce:true, photoFmt:'png', videoFmt:'webm', persistSettings:true,
   recAnimId:null, qrScanning:false, qrAnimId:null,
   zoom:1, panX:0, panY:0, isPanning:false,
   panStartX:0, panStartY:0, panOriginX:0, panOriginY:0,
@@ -1284,10 +1533,15 @@ function savePhotoFromCanvas(cvs){
       tryNext(i+1); return;
     }
     try{
-      cvs.toBlob(b=>{
+      cvs.toBlob(async b=>{
         if(b && b.size > 0){
-          downloadBlob(b, `photo_${Date.now()}.${ext}`);
-          showToast('Đã lưu ảnh (.' + ext + ')');
+          const name = `Ảnh_${Date.now()}.${ext}`;
+          await libAddItem({
+            type: 'photo', name, blob: b, mime: type,
+            width: cvs.width, height: cvs.height, duration: 0,
+            createdAt: Date.now(), size: b.size
+          });
+          showToast('Đã lưu vào Thư viện');
         } else tryNext(i+1);
       }, type, type === 'image/png' ? undefined : quality);
     }catch(e){ tryNext(i+1); }
@@ -1416,9 +1670,15 @@ async function startCamera(withAudio=false){
     }
     let audioConstraint = false;
     if(withAudio){
+      const nr = state.noiseReduce !== false;
+      const baseAud = {
+        echoCancellation: nr,
+        noiseSuppression: nr,
+        autoGainControl: true
+      };
       audioConstraint = state.audioDeviceId
-        ? { deviceId: { exact: state.audioDeviceId }, echoCancellation: true, noiseSuppression: true }
-        : { echoCancellation: true, noiseSuppression: true };
+        ? { deviceId: { exact: state.audioDeviceId }, ...baseAud }
+        : baseAud;
     }
     state.stream = await navigator.mediaDevices.getUserMedia({
       video: videoConstraint,
@@ -1666,10 +1926,18 @@ async function startRecording(){
       if(actx.state === 'suspended') await actx.resume();
       const src = actx.createMediaStreamSource(new MediaStream([audioTracks[0]]));
       const gNode = actx.createGain();
-      // setValueAtTime để chắc chắn áp dụng ngay
       gNode.gain.setValueAtTime(gainVal, actx.currentTime);
       const dest = actx.createMediaStreamDestination();
-      src.connect(gNode);
+      let node = src;
+      if(state.noiseReduce !== false){
+        // high-pass ~80Hz + low-pass ~8kHz giảm ù / nhiễu cao
+        const hp = actx.createBiquadFilter();
+        hp.type = 'highpass'; hp.frequency.value = 80; hp.Q.value = 0.7;
+        const lp = actx.createBiquadFilter();
+        lp.type = 'lowpass'; lp.frequency.value = 8000; lp.Q.value = 0.7;
+        node.connect(hp); hp.connect(lp); node = lp;
+      }
+      node.connect(gNode);
       gNode.connect(dest);
       const outTrack = dest.stream.getAudioTracks()[0];
       if(outTrack){
@@ -1748,8 +2016,14 @@ async function startRecording(){
       state.recordedChunks=[];
       return;
     }
-    downloadBlob(blob, `video_${Date.now()}.${ext}`);
-    showToast('Đã lưu video (.' + ext + ')');
+    const vname = `Video_${Date.now()}.${ext}`;
+    const dur = typeof recSeconds === 'number' ? recSeconds : 0;
+    libAddItem({
+      type: 'video', name: vname, blob, mime: mime||'video/webm',
+      width: recCanvas.width, height: recCanvas.height, duration: dur,
+      createdAt: Date.now(), size: blob.size
+    }).then(()=> showToast('Đã lưu vào Thư viện'))
+      .catch(()=> { downloadBlob(blob, vname); showToast('Đã tải video (.' + ext + ')'); });
     state.recordedChunks=[];
   };
   state.mediaRecorder.start(250);
@@ -2484,6 +2758,267 @@ if(navigator.mediaDevices?.getUserMedia) startCamera(false).then(()=>{
   adjustAspectRatio();
 });
 else{noCamera.classList.remove('hidden');showPermModal();}
+
+/* ===== IndexedDB Library ===== */
+const LIB_DB = 'webcam-library';
+const LIB_STORE = 'items';
+let libFilter = 'all';
+let libItems = [];
+let libDetailIdx = 0;
+let libCamPaused = false;
+
+function libOpenDb(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(LIB_DB, 1);
+    req.onupgradeneeded = ()=>{
+      const db = req.result;
+      if(!db.objectStoreNames.contains(LIB_STORE)){
+        db.createObjectStore(LIB_STORE, { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function libAddItem(item){
+  const db = await libOpenDb();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(LIB_STORE, 'readwrite');
+    tx.objectStore(LIB_STORE).add(item);
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+async function libGetAll(){
+  const db = await libOpenDb();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(LIB_STORE, 'readonly');
+    const req = tx.objectStore(LIB_STORE).getAll();
+    req.onsuccess = ()=> resolve((req.result||[]).sort((a,b)=> (b.createdAt||0)-(a.createdAt||0)));
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function libDelete(id){
+  const db = await libOpenDb();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(LIB_STORE, 'readwrite');
+    tx.objectStore(LIB_STORE).delete(id);
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+function libFmtDate(ts){
+  const d = new Date(ts||Date.now());
+  const pad = n=> String(n).padStart(2,'0');
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function libFmtDur(sec){
+  sec = Math.max(0, Math.floor(sec||0));
+  const m = Math.floor(sec/60), s = sec%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function libFmtSize(n){
+  if(n < 1024) return n + ' B';
+  if(n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+  return (n/1024/1024).toFixed(2) + ' MB';
+}
+function libAspectLabel(w,h){
+  if(!w||!h) return '';
+  const r = w/h;
+  if(Math.abs(r-16/9)<0.08) return '16:9';
+  if(Math.abs(r-4/3)<0.08) return '4:3';
+  if(Math.abs(r-1)<0.08) return '1:1';
+  return Math.round(w)+'×'+Math.round(h);
+}
+function pauseCamForLibrary(){
+  try{ video.pause(); }catch(e){}
+  libCamPaused = true;
+}
+function resumeCamFromLibrary(){
+  if(!libCamPaused) return;
+  libCamPaused = false;
+  try{ video.play(); }catch(e){}
+}
+async function openLibrary(){
+  closeAllMenus();
+  pauseCamForLibrary();
+  document.getElementById('library-overlay').classList.add('show');
+  document.getElementById('library-detail').classList.remove('show');
+  await renderLibGrid();
+}
+function closeLibrary(){
+  document.getElementById('library-overlay').classList.remove('show');
+  document.getElementById('library-detail').classList.remove('show');
+  resumeCamFromLibrary();
+}
+async function renderLibGrid(){
+  const grid = document.getElementById('lib-grid');
+  if(!grid) return;
+  libItems = await libGetAll();
+  const list = libItems.filter(it=>{
+    if(libFilter==='photo') return it.type==='photo';
+    if(libFilter==='video') return it.type==='video';
+    return true;
+  });
+  grid.innerHTML = '';
+  if(!list.length){
+    grid.innerHTML = '<div class="lib-empty">Chưa có ảnh hoặc video</div>';
+    return;
+  }
+  list.forEach((it)=>{
+    const realIdx = libItems.indexOf(it);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'lib-card';
+    const url = URL.createObjectURL(it.blob);
+    const asp = libAspectLabel(it.width, it.height);
+    if(it.type==='photo'){
+      const img = document.createElement('img');
+      img.src = url; img.alt = it.name||'';
+      btn.appendChild(img);
+      if(!it.blob || it.size < 100){
+        const ph = document.createElement('div');
+        ph.className = 'ph';
+        ph.textContent = 'Ảnh' + (asp? ' '+asp : '');
+        btn.appendChild(ph);
+      }
+    } else {
+      const v = document.createElement('video');
+      v.src = url; v.muted = true; v.preload = 'metadata';
+      btn.appendChild(v);
+      const meta = document.createElement('div');
+      meta.className = 'vid-meta';
+      meta.innerHTML = '<span>▶</span><span>'+libFmtDur(it.duration)+'</span>';
+      btn.appendChild(meta);
+    }
+    btn.addEventListener('click', ()=> openLibDetail(realIdx));
+    grid.appendChild(btn);
+  });
+}
+function openLibDetail(idx){
+  if(idx<0||idx>=libItems.length) return;
+  libDetailIdx = idx;
+  document.getElementById('library-detail').classList.add('show');
+  renderLibDetail();
+}
+function renderLibDetail(){
+  const it = libItems[libDetailIdx];
+  if(!it) return;
+  document.getElementById('ld-name').textContent = it.name || (it.type==='photo'?'Ảnh':'Video');
+  document.getElementById('ld-date').textContent = libFmtDate(it.createdAt);
+  const stage = document.getElementById('ld-stage');
+  stage.innerHTML = '';
+  const url = URL.createObjectURL(it.blob);
+  if(it.type==='photo'){
+    const img = document.createElement('img');
+    img.src = url; stage.appendChild(img);
+  } else {
+    const v = document.createElement('video');
+    v.src = url; v.controls = true; v.playsInline = true;
+    stage.appendChild(v);
+  }
+  document.getElementById('ld-prev').disabled = libDetailIdx <= 0;
+  document.getElementById('ld-next').disabled = libDetailIdx >= libItems.length-1;
+  const film = document.getElementById('ld-film');
+  film.innerHTML = '';
+  libItems.forEach((x,i)=>{
+    const t = document.createElement('button');
+    t.type='button'; t.className='ld-thumb'+(i===libDetailIdx?' active':'');
+    const u = URL.createObjectURL(x.blob);
+    if(x.type==='photo'){
+      const img=document.createElement('img'); img.src=u; t.appendChild(img);
+    } else {
+      const v=document.createElement('video'); v.src=u; v.muted=true; t.appendChild(v);
+    }
+    t.addEventListener('click', ()=>{ libDetailIdx=i; renderLibDetail(); });
+    film.appendChild(t);
+  });
+}
+function showLibInfo(){
+  const it = libItems[libDetailIdx];
+  if(!it) return;
+  const body = document.getElementById('lib-info-body');
+  const ext = (it.mime||'').split('/').pop() || '—';
+  let html = '';
+  html += '<div class="info-row"><span>Tên: </span>'+(it.name||'—')+'</div>';
+  html += '<div class="info-row"><span>Thời gian: </span>'+libFmtDate(it.createdAt)+'</div>';
+  html += '<div class="info-row"><span>Kích cỡ: </span>'+libFmtSize(it.size)+'</div>';
+  if(it.type==='video')
+    html += '<div class="info-row"><span>Độ dài video: </span>'+libFmtDur(it.duration)+'</div>';
+  html += '<div class="info-row"><span>Định dạng: </span>'+ext.toUpperCase()+'</div>';
+  html += '<div class="info-row"><span>Độ phân giải: </span>'+(it.width&&it.height? (it.width+'×'+it.height):'—')+'</div>';
+  body.innerHTML = html;
+  document.getElementById('lib-info-modal').classList.add('show');
+}
+
+document.getElementById('album-btn')?.addEventListener('click', e=>{ e.stopPropagation(); openLibrary(); });
+document.getElementById('lib-back')?.addEventListener('click', closeLibrary);
+document.getElementById('ld-back')?.addEventListener('click', ()=>{
+  document.getElementById('library-detail').classList.remove('show');
+  renderLibGrid();
+});
+document.querySelectorAll('.lib-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.lib-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    libFilter = tab.dataset.filter || 'all';
+    renderLibGrid();
+  });
+});
+document.getElementById('lib-help')?.addEventListener('click', ()=> document.getElementById('lib-help-modal').classList.add('show'));
+document.getElementById('lib-help-close')?.addEventListener('click', ()=> document.getElementById('lib-help-modal').classList.remove('show'));
+document.getElementById('lib-info')?.addEventListener('click', showLibInfo);
+document.getElementById('lib-info-close')?.addEventListener('click', ()=> document.getElementById('lib-info-modal').classList.remove('show'));
+document.getElementById('ld-download')?.addEventListener('click', ()=>{
+  const it = libItems[libDetailIdx];
+  if(!it) return;
+  downloadBlob(it.blob, it.name || ('file_'+Date.now()));
+  showToast('Đang tải xuống');
+});
+document.getElementById('ld-delete')?.addEventListener('click', ()=>{
+  const it = libItems[libDetailIdx];
+  if(!it) return;
+  document.getElementById('lib-del-msg').textContent =
+    it.type==='video' ? 'Xóa vĩnh viễn video này?' : 'Xóa vĩnh viễn ảnh này?';
+  document.getElementById('lib-del-modal').classList.add('show');
+});
+document.getElementById('lib-del-cancel')?.addEventListener('click', ()=> document.getElementById('lib-del-modal').classList.remove('show'));
+document.getElementById('lib-del-ok')?.addEventListener('click', async ()=>{
+  const it = libItems[libDetailIdx];
+  document.getElementById('lib-del-modal').classList.remove('show');
+  if(!it) return;
+  await libDelete(it.id);
+  libItems = await libGetAll();
+  if(!libItems.length){
+    document.getElementById('library-detail').classList.remove('show');
+    await renderLibGrid();
+    return;
+  }
+  if(libDetailIdx >= libItems.length) libDetailIdx = libItems.length-1;
+  renderLibDetail();
+});
+document.getElementById('ld-prev')?.addEventListener('click', ()=>{
+  if(libDetailIdx>0){ libDetailIdx--; renderLibDetail(); }
+});
+document.getElementById('ld-next')?.addEventListener('click', ()=>{
+  if(libDetailIdx<libItems.length-1){ libDetailIdx++; renderLibDetail(); }
+});
+
+/* Noise reduce toggle */
+(function(){
+  const el = document.getElementById('set-noise-reduce');
+  if(!el) return;
+  try{
+    const v = localStorage.getItem('webcam-noise-reduce');
+    if(v==='0'){ state.noiseReduce=false; el.checked=false; }
+    else { state.noiseReduce=true; el.checked=true; }
+  }catch(e){}
+  el.addEventListener('change', ()=>{
+    state.noiseReduce = !!el.checked;
+    try{ localStorage.setItem('webcam-noise-reduce', state.noiseReduce?'1':'0'); }catch(e){}
+  });
+})();
+
 </script>
 </body>
 </html>
