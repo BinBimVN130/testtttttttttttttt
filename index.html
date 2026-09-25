@@ -311,10 +311,10 @@
 
     /* Bộ lọc panel */
     #filter-panel{
-      display:flex;position:fixed;z-index:60;flex-direction:column;gap:12px;
-      background:rgba(30,30,32,.92);border-radius:18px;padding:14px 16px 16px;
+      display:flex;position:fixed;z-index:60;flex-direction:column;gap:8px;
+      background:rgba(30,30,32,.92);border-radius:16px;padding:10px 12px 12px;
       box-shadow:0 12px 40px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.16);
-      width:176px;
+      width:148px;
       opacity:0;visibility:hidden;pointer-events:none;
       transform:translateX(-8px);
       transition:opacity .18s ease,visibility .18s,transform .18s ease;
@@ -324,18 +324,18 @@
       transform:translateX(0);
     }
     .filter-grid{
-      display:grid;grid-template-columns:repeat(2,1fr);gap:12px 10px;
+      display:grid;grid-template-columns:repeat(2,1fr);gap:8px 8px;
     }
     .filter-item{
-      display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;
+      display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;
       border:none;background:transparent;color:#fff;padding:0;
     }
     .filter-item .thumb{
-      width:68px;height:68px;border-radius:14px;border:2px solid transparent;
+      width:52px;height:52px;border-radius:10px;border:2px solid transparent;
       overflow:hidden;transition:transform .1s ease;
     }
     .filter-item.selected .thumb, .filter-item:hover .thumb{border-color:#fff;transform:scale(1.03)}
-    .filter-item .fname{font-size:11px;color:rgba(255,255,255,.75);font-weight:500}
+    .filter-item .fname{font-size:10px;color:rgba(255,255,255,.75);font-weight:500}
 
     #timer-menu{
       display:flex;position:fixed;z-index:60;
@@ -393,7 +393,8 @@
 
     
     /* Tooltip nhanh — nhỏ hơn, trượt trái/phải */
-    .app-tip{
+    .app-tip{display:none !important}
+    .app-tip-old{
       position:fixed;z-index:320;pointer-events:none;
       padding:5px 9px;border-radius:8px;font-size:11px;font-weight:500;
       background:rgba(30,30,32,.88);color:#fff;
@@ -503,13 +504,13 @@
       display:none;position:fixed;inset:0;z-index:400;
       background:#0a0a0a;flex-direction:column;
       color:#fff;font-family:inherit;
-      opacity:0;transform:scale(0.92);
-      transition:opacity .28s ease, transform .28s ease;
+      opacity:0;transform:translateY(100%);
+      transition:opacity .3s ease, transform .3s cubic-bezier(.4,0,.2,1);
       pointer-events:auto;
     }
-    #library-overlay.show{display:flex !important;opacity:1;transform:scale(1);pointer-events:auto}
+    #library-overlay.show{display:flex !important;opacity:1;transform:translateY(0);pointer-events:auto}
     #library-overlay.closing{
-      opacity:0;transform:scale(0.92);pointer-events:none;
+      opacity:0;transform:translateY(100%);pointer-events:none;
     }
     #library-overlay.show .lib-card{
       animation:libIn .22s ease both;
@@ -562,6 +563,10 @@
       flex:1;overflow:auto;padding:12px 16px 24px;
       display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
       gap:12px;align-content:start;
+      transition:gap .2s ease;
+    }
+    .lib-grid .lib-card{
+      transition:transform .2s ease, box-shadow .15s ease;
     }
     .lib-grid.size-sm{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
     .lib-grid.size-md{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
@@ -607,12 +612,26 @@
     body.lib-selecting #lib-help,
     body.lib-selecting #lib-layout-btn,
     body.lib-selecting #lib-layout-menu{display:none !important}
-    body.lib-selecting #lib-del-sel-btn{
+    body.lib-selecting #lib-multi-btn{
       display:flex !important;width:auto;min-width:72px;height:36px;border-radius:18px;
-      padding:0 16px;gap:6px;font-size:13px;font-weight:600;
+      padding:0 14px;gap:6px;font-size:13px;font-weight:600;
+      background:#ffaa00;color:#000;
     }
-    body.lib-selecting #lib-del-sel-btn::after{content:'Xóa'}
+    body.lib-selecting #lib-multi-btn::after{content:'Hủy'}
+    body.lib-selecting #lib-del-sel-btn{
+      display:flex !important;width:auto;min-width:auto;height:36px;border-radius:18px;
+      padding:0 14px;gap:6px;font-size:13px;font-weight:600;
+    }
+    body.lib-selecting #lib-del-sel-btn::after{content:'Xóa vĩnh viễn'}
     body.lib-selecting #lib-del-sel-btn.show{display:flex !important}
+    body.lib-selecting #lib-dl-sel-btn{
+      display:flex !important;width:auto;height:36px;border-radius:18px;
+      padding:0 14px;gap:6px;font-size:13px;font-weight:600;
+      background:rgba(10,132,255,.25);color:#6cb6ff;border:none;
+      align-items:center;justify-content:center;cursor:pointer;
+    }
+    body.lib-selecting #lib-dl-sel-btn::after{content:'Tải mục đã chọn'}
+    #lib-dl-sel-btn{display:none}
     .lib-card.selected{
       transform:scale(0.88);
       box-shadow:0 0 0 3px rgba(255,170,0,.55);
@@ -666,10 +685,10 @@
     #library-detail{
       display:none;position:fixed;inset:0;z-index:410;
       background:#0a0a0a;flex-direction:column;color:#fff;
-      opacity:0;transform:translateX(16px);
-      transition:opacity .2s ease, transform .2s ease;
+      opacity:0;transform:scale(0.94);
+      transition:opacity .22s ease, transform .22s ease;
     }
-    #library-detail.show{display:flex;opacity:1;transform:translateX(0)}
+    #library-detail.show{display:flex;opacity:1;transform:scale(1)}
     .ld-top{
       display:grid;grid-template-columns:1fr auto 1fr;
       align-items:center;padding:12px 14px;gap:10px;flex-shrink:0;
@@ -733,7 +752,7 @@
 
     /* Info / help / confirm modals */
     .lib-modal{
-      display:none;position:fixed;inset:0;z-index:295;
+      display:none;position:fixed;inset:0;z-index:450;
       background:rgba(0,0,0,0);align-items:center;justify-content:center;padding:20px;
       opacity:0;transition:opacity .2s ease, background .2s ease;
     }
@@ -1182,7 +1201,10 @@
         <button type="button" class="lib-tab" data-filter="video">Video</button>
       </div>
       <div class="lib-top-right">
-        <button type="button" class="lib-icon-btn" id="lib-del-sel-btn" title="Xóa đã chọn" data-tip="Xóa đã chọn">
+        <button type="button" class="lib-icon-btn" id="lib-dl-sel-btn" title="Tải mục đã chọn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+        </button>
+        <button type="button" class="lib-icon-btn" id="lib-del-sel-btn" title="Xóa vĩnh viễn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
         </button>
         <button type="button" class="lib-icon-btn" id="lib-layout-btn" title="Bố cục" data-tip="Bố cục">
@@ -1508,6 +1530,15 @@
     <div class="perm-box">
       <p>Hãy cấp quyền truy cập camera và micro cho trang web này</p>
       <button type="button" id="perm-ok">OK</button>
+    </div>
+  </div>
+  <div id="mobile-warn-modal" class="lib-modal">
+    <div class="lib-modal-box">
+      <h3>Thông báo</h3>
+      <p>Trang web này chỉ tương thích tốt máy tính.</p>
+      <div class="lib-modal-actions">
+        <button type="button" class="btn-ok" id="mobile-warn-ok">OK</button>
+      </div>
     </div>
   </div>
   <div id="toast"></div>
@@ -2979,73 +3010,12 @@ async function restorePreviewResolution(){
 }
 
 
-/* ===== Tooltip unified (event delegation) ===== */
+/* Native title tooltips — delay ~trình duyệt (không custom) */
 (function(){
   document.querySelectorAll('.app-tip').forEach(t=>t.remove());
-  const tip = document.createElement('div');
-  tip.className = 'app-tip';
-  tip.id = 'app-tip';
-  document.body.appendChild(tip);
-  let hideT = null;
-  let curEl = null;
-  function hideTip(){
-    tip.classList.remove('show');
-    curEl = null;
-  }
-  function tipText(el){
-    return el.getAttribute('data-tip') || el.getAttribute('title') || '';
-  }
-  function showFor(el){
-    const text = tipText(el);
-    if(!text) return;
-    clearTimeout(hideT);
-    curEl = el;
-    const r = el.getBoundingClientRect();
-    tip.textContent = text;
-    tip.classList.remove('show','dir-left','dir-right','dir-down','dir-up');
-    const inLib = !!(el.closest('#library-overlay') || el.closest('#library-detail') || el.closest('.lib-modal'));
-    const inRight = !!el.closest('.right-controls');
-    const inLeft = !!el.closest('.left-controls');
-    const gap = 10;
-    if(inLib){
-      if(r.top < window.innerHeight * 0.55){
-        tip.style.left = (r.left + r.width/2) + 'px';
-        tip.style.top = (r.bottom + gap) + 'px';
-        tip.classList.add('dir-down');
-      } else {
-        tip.style.left = (r.left + r.width/2) + 'px';
-        tip.style.top = r.top + 'px';
-        tip.classList.add('dir-up');
-      }
-    } else if(inRight){
-      tip.style.left = (r.left - gap) + 'px';
-      tip.style.top = (r.top + r.height/2) + 'px';
-      tip.classList.add('dir-left');
-    } else {
-      tip.style.left = (r.right + gap) + 'px';
-      tip.style.top = (r.top + r.height/2) + 'px';
-      tip.classList.add('dir-right');
-    }
-    requestAnimationFrame(()=> tip.classList.add('show'));
-  }
-  document.addEventListener('mouseover', e=>{
-    const el = e.target.closest('[data-tip], [title]');
-    if(!el || el === tip) return;
-    // bỏ title native
-    if(el.hasAttribute('title') && !el.getAttribute('data-tip')){
-      el.setAttribute('data-tip', el.getAttribute('title'));
-      el.removeAttribute('title');
-    }
-    if(el !== curEl) showFor(el);
-  }, true);
-  document.addEventListener('mouseout', e=>{
-    const el = e.target.closest('[data-tip]');
-    if(!el) return;
-    const to = e.relatedTarget;
-    if(to && el.contains(to)) return;
-    hideT = setTimeout(hideTip, 60);
-  }, true);
-  document.addEventListener('click', ()=> hideTip(), true);
+  document.querySelectorAll('[data-tip]').forEach(el=>{
+    if(!el.getAttribute('title')) el.setAttribute('title', el.getAttribute('data-tip'));
+  });
 })();
 
 /* Mode pill trượt */
@@ -3384,7 +3354,10 @@ async function renderLibGrid(){
 function openLibDetail(idx){
   if(idx<0||idx>=libItems.length) return;
   libDetailIdx = idx;
-  document.getElementById('library-detail').classList.add('show');
+  const det = document.getElementById('library-detail');
+  det.style.display = 'flex';
+  void det.offsetWidth;
+  det.classList.add('show');
   renderLibDetail();
 }
 let libViewZoom = 1;
@@ -3490,15 +3463,11 @@ applyLibGridSize(libGridSize);
 
 document.getElementById('lib-multi-btn')?.addEventListener('click', e=>{
   e.stopPropagation();
-  libSelecting = !libSelecting;
-  const btn = document.getElementById('lib-multi-btn');
-  if(libSelecting){
-    btn?.classList.add('active');
-    document.body.classList.add('lib-selecting');
-    updateLibTitle();
-  } else {
-    exitLibSelectMode();
-  }
+  if(libSelecting){ exitLibSelectMode(); return; }
+  libSelecting = true;
+  document.getElementById('lib-multi-btn')?.classList.add('active');
+  document.body.classList.add('lib-selecting');
+  updateLibTitle();
   updateLibDelBtn();
 });
 document.getElementById('lib-del-sel-btn')?.addEventListener('click', async e=>{
@@ -3508,16 +3477,33 @@ document.getElementById('lib-del-sel-btn')?.addEventListener('click', async e=>{
   const ids = [...libSelected];
   for(const id of ids){ await libDelete(id); }
   libSelected.clear();
+  exitLibSelectMode();
   await renderLibGrid();
   updateAlbumThumb();
-  updateLibDelBtn();
+});
+document.getElementById('lib-dl-sel-btn')?.addEventListener('click', async e=>{
+  e.stopPropagation();
+  if(!libSelected.size) return;
+  const items = libItems.filter(it=>libSelected.has(it.id));
+  if(!items.length) return;
+  const total = items.reduce((s,it)=>s+(it.size||0),0);
+  const sizeStr = total<1024*1024 ? (total/1024).toFixed(1)+' KB' : (total/1024/1024).toFixed(2)+' MB';
+  if(!confirm('Tải '+items.length+' tệp về máy?\nDung lượng: '+sizeStr)) return;
+  for(const it of items){
+    downloadBlob(it.blob, it.name || ('file_'+it.id));
+    await new Promise(r=>setTimeout(r, 200));
+  }
+  exitLibSelectMode();
+  await renderLibGrid();
+  showToast('Đã tải '+items.length+' tệp');
 });
 
 document.getElementById('lib-back')?.addEventListener('click', closeLibrary);
 document.getElementById('ld-back')?.addEventListener('click', ()=>{
   stopLibMediaElements();
-  document.getElementById('library-detail').classList.remove('show');
-  renderLibGrid();
+  const det = document.getElementById('library-detail');
+  det.classList.remove('show');
+  setTimeout(()=>{ det.style.display=''; renderLibGrid(); }, 220);
 });
 function updateLibTabPill(){
   const pill = document.getElementById('lib-tab-pill');
@@ -3686,6 +3672,22 @@ document.getElementById('qr-hist-clear')?.addEventListener('click', ()=>{
   try{ localStorage.removeItem(QR_HIST_KEY); }catch(e){}
   renderQrHistory();
 });
+
+
+(function(){
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    || (navigator.maxTouchPoints>1 && window.innerWidth<900);
+  if(!isMobile) return;
+  if(localStorage.getItem('webcam-mobile-ok')==='1') return;
+  const m = document.getElementById('mobile-warn-modal');
+  if(!m) return;
+  m.style.display='flex'; void m.offsetWidth; m.classList.add('show');
+  document.getElementById('mobile-warn-ok')?.addEventListener('click', ()=>{
+    localStorage.setItem('webcam-mobile-ok','1');
+    m.classList.remove('show');
+    setTimeout(()=>{ m.style.display=''; }, 200);
+  });
+})();
 
 </script>
 </body>
