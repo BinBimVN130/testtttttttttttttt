@@ -745,21 +745,29 @@
     }
     .ld-nav svg{width:18px;height:18px}
     .ld-nav:disabled{opacity:.3;cursor:default}
+    .ld-stage-wrap{
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      min-height:0;max-width:min(920px,100%);width:100%;gap:0;
+    }
     .ld-stage{
-      flex:1;max-width:min(1100px,96%);height:100%;
+      flex:1;width:100%;min-height:0;
       display:flex;align-items:center;justify-content:center;
-      border-radius:0;overflow:visible;background:transparent;
+      border-radius:12px;overflow:hidden;background:transparent;
     }
     .ld-stage img,.ld-stage video{
       max-width:100%;max-height:100%;object-fit:contain;border-radius:0;
       transform-origin:center center;
       -webkit-user-drag:none;user-select:none;pointer-events:auto;
     }
-    .ld-stage img{
-      touch-action:none;
-    }
+    .ld-stage img{touch-action:none}
     .ld-stage.can-zoom{cursor:grab}
     .ld-stage.zooming{cursor:grabbing}
+    #ld-zoom-label{
+      flex-shrink:0;margin-top:14px;font-size:13px;font-weight:500;
+      color:rgba(255,255,255,.55);letter-spacing:.02em;
+      opacity:0;transition:opacity .15s ease;pointer-events:none;
+    }
+    #ld-zoom-label.show{opacity:1}
     .ld-film{
       flex-shrink:0;padding:10px 16px 16px;display:flex;gap:8px;
       overflow-x:auto;justify-content:center;
@@ -1279,7 +1287,10 @@
       <button type="button" class="ld-nav" id="ld-prev" title="Trước" data-tip="Trước">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
       </button>
-      <div class="ld-stage" id="ld-stage"></div>
+      <div class="ld-stage-wrap">
+        <div class="ld-stage" id="ld-stage"></div>
+        <div id="ld-zoom-label">1x</div>
+      </div>
       <button type="button" class="ld-nav" id="ld-next" title="Sau" data-tip="Sau">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
       </button>
@@ -1463,6 +1474,7 @@
               <option value="1920x1080">1080p</option>
             </select>
           </div>
+          <div id="cam-info-warn" style="display:none;font-size:12px;color:#ffaa00;padding:0 4px 10px">Cam thực tế không đạt độ phân giải đã chọn</div>
           <div class="settings-row">
             <div>
               <div class="lab">FPS khung hình</div>
@@ -1479,7 +1491,6 @@
           <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px;border-bottom:none">
             <div class="info-row" style="font-size:13px;color:rgba(255,255,255,.75)">FPS: Đã chọn: <span id="cam-info-fps-want" style="color:#fff">—</span> | Đo được: <span id="cam-info-fps" style="color:#fff">—</span></div>
             <div class="info-row" style="font-size:13px;color:rgba(255,255,255,.75)">Độ phân giải: <span id="cam-info-res" style="color:#fff">—</span></div>
-            <div id="cam-info-warn" style="display:none;font-size:12px;color:#ffaa00;margin-top:2px"></div>
           </div>
         </div>
 
@@ -3592,6 +3603,8 @@ function renderLibDetail(){
   stage.innerHTML = '';
   const url = URL.createObjectURL(it.blob);
   stage.classList.toggle('can-zoom', it.type==='photo');
+  const zLab = document.getElementById('ld-zoom-label');
+  if(zLab){ zLab.textContent = '1x'; zLab.classList.remove('show'); }
   if(it.type==='photo'){
     const img = document.createElement('img');
     img.src = url;
@@ -3865,14 +3878,23 @@ document.getElementById('ld-next')?.addEventListener('click', ()=>{
   const stage = document.getElementById('ld-stage');
   if(!stage) return;
   let panX = 0, panY = 0, dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+  function updateZoomLabel(){
+    const zLab = document.getElementById('ld-zoom-label');
+    if(!zLab) return;
+    const t = (Math.round(libViewZoom * 10) / 10) + 'x';
+    zLab.textContent = t.replace('.0x','x');
+    if(libViewZoom > 1.05) zLab.classList.add('show');
+    else zLab.classList.remove('show');
+  }
   function applyImgTransform(img){
     if(!img) return;
     if(libViewZoom <= 1.01){ panX = 0; panY = 0; }
     img.style.transform = 'translate('+panX+'px,'+panY+'px) scale('+libViewZoom+')';
     img.style.transformOrigin = 'center center';
     stage.style.cursor = libViewZoom > 1.05 ? (dragging ? 'grabbing' : 'grab') : 'default';
+    updateZoomLabel();
   }
-  window.__libResetPan = ()=>{ panX=0; panY=0; };
+  window.__libResetPan = ()=>{ panX=0; panY=0; updateZoomLabel(); };
   // Chặn drag-to-save toàn stage
   stage.addEventListener('dragstart', e=>{ e.preventDefault(); return false; });
   stage.addEventListener('contextmenu', e=>{
@@ -3906,7 +3928,7 @@ document.getElementById('ld-next')?.addEventListener('click', ()=>{
     if(!media) return;
     panX = ox + (e.clientX - sx);
     panY = oy + (e.clientY - sy);
-    const max = 280 * libViewZoom;
+    const max = 160 * (libViewZoom - 1);
     panX = Math.max(-max, Math.min(max, panX));
     panY = Math.max(-max, Math.min(max, panY));
     applyImgTransform(media);
