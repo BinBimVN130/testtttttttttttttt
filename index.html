@@ -563,10 +563,6 @@
       flex:1;overflow:auto;padding:12px 16px 24px;
       display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
       gap:12px;align-content:start;
-      transition:gap .2s ease;
-    }
-    .lib-grid .lib-card{
-      transition:transform .2s ease, box-shadow .15s ease;
     }
     .lib-grid.size-sm{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
     .lib-grid.size-md{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
@@ -616,6 +612,10 @@
       display:flex !important;width:auto;min-width:72px;height:36px;border-radius:18px;
       padding:0 14px;gap:6px;font-size:13px;font-weight:600;
       background:#ffaa00;color:#000;
+    }
+    body.lib-selecting #lib-multi-btn svg{display:none}
+    body.lib-selecting #lib-multi-btn::before{
+      content:'×';font-size:20px;font-weight:700;line-height:1;margin-right:2px;
     }
     body.lib-selecting #lib-multi-btn::after{content:'Hủy'}
     body.lib-selecting #lib-del-sel-btn{
@@ -2028,23 +2028,35 @@ function drawToCanvas(targetCtx,tw,th,quality){
   const vw = video.videoWidth, vh = video.videoHeight;
   if(!vw||!vh) return;
   const crop = getAspectCrop(vw, vh);
+  const z = Math.max(1, state.zoom || 1);
+  const frameW = cameraFrame.clientWidth || tw;
+  const frameH = cameraFrame.clientHeight || th;
+  // Vùng nhìn thấy = crop / zoom, lệch theo pan (px khung → tọa độ crop)
+  let viewW = crop.sw / z;
+  let viewH = crop.sh / z;
+  let ox = -(state.panX || 0) * (crop.sw / frameW) / z;
+  let oy = -(state.panY || 0) * (crop.sh / frameH) / z;
+  if(state.flipH) ox = -ox;
+  if(state.flipV) oy = -oy;
+  let sx = crop.sx + (crop.sw - viewW) / 2 + ox;
+  let sy = crop.sy + (crop.sh - viewH) / 2 + oy;
+  // clamp trong crop
+  sx = Math.max(crop.sx, Math.min(crop.sx + crop.sw - viewW, sx));
+  sy = Math.max(crop.sy, Math.min(crop.sy + crop.sh - viewH, sy));
   targetCtx.save();
   targetCtx.imageSmoothingEnabled = true;
   targetCtx.imageSmoothingQuality = hi ? 'high' : 'medium';
-  const cx=tw/2,cy=th/2;
-  targetCtx.translate(cx,cy);
-  targetCtx.scale(state.flipH?-state.zoom:state.zoom, state.flipV?-state.zoom:state.zoom);
-  const scaleX=tw/(cameraFrame.clientWidth||tw);
-  const scaleY=th/(cameraFrame.clientHeight||th);
-  targetCtx.translate(state.panX*scaleX/state.zoom, state.panY*scaleY/state.zoom);
-  targetCtx.translate(-cx,-cy);
+  const cx=tw/2, cy=th/2;
+  targetCtx.translate(cx, cy);
+  targetCtx.scale(state.flipH ? -1 : 1, state.flipV ? -1 : 1);
+  targetCtx.translate(-cx, -cy);
   let f = video.style.filter || 'none';
   if(hi && state.filter === 'sharp'){
     if(f.indexOf('url(#sharpen)') < 0)
       f = (f === 'none' || !f ? '' : f) + ' url(#sharpen)';
   }
   targetCtx.filter = f || 'none';
-  targetCtx.drawImage(video, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, tw, th);
+  targetCtx.drawImage(video, sx, sy, viewW, viewH, 0, 0, tw, th);
   targetCtx.filter = 'none';
   targetCtx.restore();
 }
@@ -2855,17 +2867,38 @@ async function applyPreviewSettings(){
   state.previewFps = parseInt(setPreviewFps.value, 10); if(isNaN(state.previewFps)) state.previewFps = 30;
   state.captureRes = state.previewRes;
   const hadAudio = state.stream?.getAudioTracks().some(t=>t.readyState==='live');
-  // Buộc mở lại cam với constraint mới
+  // Chụp 1 frame "ảo" rồi bỏ — kích hoạt pipeline trước khi đổi constraint
+  try{
+    if(video.videoWidth){
+      const c = document.createElement('canvas');
+      c.width = 16; c.height = 16;
+      c.getContext('2d').drawImage(video, 0, 0, 16, 16);
+      await new Promise(r=> c.toBlob(()=>r(), 'image/jpeg', 0.1));
+    }
+  }catch(e){}
   if(state.stream){
     state.stream.getTracks().forEach(t=>{ try{t.stop()}catch(e){} });
     state.stream=null;
     state._fpsRunning=false;
   }
+  try{ video.srcObject = null; }catch(e){}
+  await new Promise(r=>setTimeout(r, 200));
   await startCamera(!!hadAudio && state.mode==='video');
   try{ await video.play(); }catch(e){}
-  await waitForVideoFrame(1500);
+  await waitForVideoFrame(1200);
+  // applyConstraints thêm lần nữa
+  try{
+    const track = state.stream?.getVideoTracks()?.[0];
+    if(track){
+      const [w,h] = (state.previewRes||'1280x720').split('x').map(Number);
+      await track.applyConstraints({
+        width: { ideal: w }, height: { ideal: h },
+        frameRate: state.previewFps > 0 ? { ideal: state.previewFps } : { ideal: 60 }
+      });
+      await waitForVideoFrame(600);
+    }
+  }catch(e){}
   savePersistedSettings();
-  
 }
 if(setPreviewRes) setPreviewRes.addEventListener('change', applyPreviewSettings);
 if(setPreviewFps) setPreviewFps.addEventListener('change', applyPreviewSettings);
@@ -3307,47 +3340,66 @@ async function renderLibGrid(){
     updateLibDelBtn();
     return;
   }
-  list.forEach((it)=>{
-    const realIdx = libItems.indexOf(it);
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'lib-card' + (libSelected.has(it.id) ? ' selected' : '');
-    btn.dataset.id = it.id;
-    const check = document.createElement('span');
-    check.className = 'lib-check';
-    btn.appendChild(check);
-    const url = URL.createObjectURL(it.blob);
-    const asp = libAspectLabel(it.width, it.height);
-    if(it.type==='photo'){
-      const img = document.createElement('img');
-      img.src = url; img.alt = it.name||'';
-      btn.appendChild(img);
-      if(!it.blob || it.size < 100){
-        const ph = document.createElement('div');
-        ph.className = 'ph';
-        ph.textContent = 'Ảnh' + (asp? ' '+asp : '');
-        btn.appendChild(ph);
+  function dayKey(ts){
+    const d = new Date(ts||0);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function dayLabel(ts){
+    const d = new Date(ts||0);
+    const now = new Date();
+    const same = d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
+    if(same) return 'Hôm nay';
+    return String(d.getDate()).padStart(2,'0')+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+  }
+  const groups = {};
+  list.forEach(it=>{
+    const k = dayKey(it.createdAt);
+    if(!groups[k]) groups[k] = [];
+    groups[k].push(it);
+  });
+  const keys = Object.keys(groups).sort((a,b)=> b.localeCompare(a));
+  keys.forEach(k=>{
+    const head = document.createElement('div');
+    head.className = 'lib-day-head';
+    head.textContent = dayLabel(groups[k][0].createdAt);
+    head.style.cssText = 'grid-column:1/-1;font-size:13px;font-weight:600;color:rgba(255,255,255,.55);padding:8px 4px 4px';
+    grid.appendChild(head);
+    groups[k].forEach((it)=>{
+      const realIdx = libItems.indexOf(it);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'lib-card' + (libSelected.has(it.id) ? ' selected' : '');
+      btn.dataset.id = it.id;
+      const check = document.createElement('span');
+      check.className = 'lib-check';
+      btn.appendChild(check);
+      const url = URL.createObjectURL(it.blob);
+      const asp = libAspectLabel(it.width, it.height);
+      if(it.type==='photo'){
+        const img = document.createElement('img');
+        img.src = url; img.alt = it.name||'';
+        btn.appendChild(img);
+      } else {
+        const v = document.createElement('video');
+        v.src = url; v.muted = true; v.preload = 'metadata';
+        btn.appendChild(v);
+        const meta = document.createElement('div');
+        meta.className = 'vid-meta';
+        meta.innerHTML = '<span>▶</span><span>'+libFmtDur(it.duration)+'</span>';
+        btn.appendChild(meta);
       }
-    } else {
-      const v = document.createElement('video');
-      v.src = url; v.muted = true; v.preload = 'metadata';
-      btn.appendChild(v);
-      const meta = document.createElement('div');
-      meta.className = 'vid-meta';
-      meta.innerHTML = '<span>▶</span><span>'+libFmtDur(it.duration)+'</span>';
-      btn.appendChild(meta);
-    }
-    btn.addEventListener('click', e=>{
-      e.stopPropagation();
-      if(libSelecting){
-        if(libSelected.has(it.id)){ libSelected.delete(it.id); btn.classList.remove('selected'); }
-        else { libSelected.add(it.id); btn.classList.add('selected'); }
-        updateLibDelBtn();
-        return;
-      }
-      openLibDetail(realIdx);
+      btn.addEventListener('click', e=>{
+        e.stopPropagation();
+        if(libSelecting){
+          if(libSelected.has(it.id)){ libSelected.delete(it.id); btn.classList.remove('selected'); }
+          else { libSelected.add(it.id); btn.classList.add('selected'); }
+          updateLibDelBtn();
+          return;
+        }
+        openLibDetail(realIdx);
+      });
+      grid.appendChild(btn);
     });
-    grid.appendChild(btn);
   });
   updateLibDelBtn();
 }
@@ -3365,7 +3417,7 @@ function renderLibDetail(){
   stopLibMediaElements();
   const it = libItems[libDetailIdx];
   if(!it) return;
-  libViewZoom = 1;
+  libViewZoom = 1; try{ window.__libResetPan && window.__libResetPan(); }catch(e){}
   document.getElementById('ld-name').textContent = it.name || (it.type==='photo'?'Ảnh':'Video');
   document.getElementById('ld-date').textContent = libFmtDate(it.createdAt);
   const stage = document.getElementById('ld-stage');
@@ -3374,13 +3426,45 @@ function renderLibDetail(){
   stage.classList.toggle('can-zoom', it.type==='photo');
   if(it.type==='photo'){
     const img = document.createElement('img');
-    img.src = url; img.style.transform = 'scale(1)'; stage.appendChild(img);
+    img.src = url; img.style.transform = 'translate(0,0) scale(1)'; img.style.transformOrigin='center center';
+    stage.appendChild(img);
   } else {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;max-width:100%;max-height:100%';
     const v = document.createElement('video');
     v.src = url; v.controls = true; v.playsInline = true;
     v.disablePictureInPicture = true;
-    v.setAttribute('controlsList', 'nodownload noplaybackrate noremoteplayback');
-    stage.appendChild(v);
+    v.setAttribute('controlsList', 'nodownload noremoteplayback');
+    v.style.maxWidth = '100%'; v.style.maxHeight = 'calc(100% - 36px)';
+    // Sửa duration WebM sai trên Chrome
+    const storedDur = it.duration || 0;
+    v.addEventListener('loadedmetadata', function onMeta(){
+      if(v.duration === Infinity || !isFinite(v.duration) || (storedDur > 2 && v.duration < storedDur * 0.5)){
+        v.currentTime = 1e101;
+        v.addEventListener('timeupdate', function onTu(){
+          v.removeEventListener('timeupdate', onTu);
+          v.currentTime = 0;
+        });
+      }
+    });
+    const rateRow = document.createElement('div');
+    rateRow.style.cssText = 'display:flex;gap:6px;align-items:center;font-size:12px;color:rgba(255,255,255,.7)';
+    rateRow.innerHTML = '<span>Tốc độ</span>';
+    [0.5, 0.75, 1, 1.25, 1.5, 2].forEach(r=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = r + 'x';
+      b.style.cssText = 'border:none;padding:4px 8px;border-radius:8px;font-size:12px;cursor:pointer;background:rgba(255,255,255,.1);color:#fff';
+      if(r===1) b.style.background = '#ffaa00'; b.style.color = r===1 ? '#000' : '#fff';
+      b.addEventListener('click', ()=>{
+        v.playbackRate = r;
+        rateRow.querySelectorAll('button').forEach(x=>{ x.style.background='rgba(255,255,255,.1)'; x.style.color='#fff'; });
+        b.style.background = '#ffaa00'; b.style.color = '#000';
+      });
+      rateRow.appendChild(b);
+    });
+    wrap.appendChild(v); wrap.appendChild(rateRow);
+    stage.appendChild(wrap);
   }
   document.getElementById('ld-prev').disabled = libDetailIdx <= 0;
   document.getElementById('ld-next').disabled = libDetailIdx >= libItems.length-1;
@@ -3437,8 +3521,29 @@ document.getElementById('lib-layout-btn')?.addEventListener('click', e=>{
   const labels = {sm:'Nhỏ', md:'Trung bình', lg:'Lớn'};
   const i = (order.indexOf(libGridSize) + 1) % order.length;
   applyLibGridSize(order[i]);
-  showToast('Bố cục: ' + labels[order[i]]);
+  showCenterPopup('Bố cục: ' + labels[order[i]]);
 });
+function showCenterPopup(msg){
+  let el = document.getElementById('center-popup');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'center-popup';
+    el.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);z-index:500;background:#1c1c1e;color:#fff;padding:16px 28px;border-radius:14px;font-size:15px;font-weight:600;border:1px solid rgba(255,255,255,.14);box-shadow:0 12px 40px rgba(0,0,0,.5);opacity:0;transition:opacity .18s ease,transform .18s ease;pointer-events:none';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = '0';
+  el.style.transform = 'translate(-50%,-50%) scale(.94)';
+  requestAnimationFrame(()=>{
+    el.style.opacity = '1';
+    el.style.transform = 'translate(-50%,-50%) scale(1)';
+  });
+  clearTimeout(showCenterPopup._t);
+  showCenterPopup._t = setTimeout(()=>{
+    el.style.opacity = '0';
+    el.style.transform = 'translate(-50%,-50%) scale(.94)';
+  }, 1400);
+}
 document.addEventListener('click', ()=>{
   const menu = document.getElementById('lib-layout-menu');
   if(menu?.classList.contains('show')){
@@ -3592,18 +3697,50 @@ document.getElementById('ld-next')?.addEventListener('click', ()=>{
 })();
 
 
-/* Zoom cuộn chuột khi xem thư viện */
+/* Zoom + pan ảnh trong thư viện */
 (function(){
   const stage = document.getElementById('ld-stage');
   if(!stage) return;
+  let panX = 0, panY = 0, dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+  function applyImgTransform(img){
+    if(!img) return;
+    if(libViewZoom <= 1.01){ panX = 0; panY = 0; }
+    img.style.transform = 'translate('+panX+'px,'+panY+'px) scale('+libViewZoom+')';
+    img.style.transformOrigin = 'center center';
+    stage.style.cursor = libViewZoom > 1.05 ? (dragging ? 'grabbing' : 'grab') : 'default';
+  }
+  window.__libResetPan = ()=>{ panX=0; panY=0; };
   stage.addEventListener('wheel', e=>{
     if(!document.getElementById('library-detail')?.classList.contains('show')) return;
-    const media = stage.querySelector('img'); // chỉ ảnh
+    const media = stage.querySelector('img');
     if(!media) return;
     e.preventDefault();
+    const prev = libViewZoom;
     libViewZoom = Math.min(5, Math.max(1, libViewZoom + (e.deltaY < 0 ? 0.15 : -0.15)));
-    media.style.transform = 'scale('+libViewZoom+')';
+    if(libViewZoom <= 1.01){ panX = 0; panY = 0; }
+    applyImgTransform(media);
   }, {passive:false});
+  stage.addEventListener('pointerdown', e=>{
+    const media = stage.querySelector('img');
+    if(!media || libViewZoom <= 1.05) return;
+    dragging = true;
+    sx = e.clientX; sy = e.clientY; ox = panX; oy = panY;
+    stage.setPointerCapture(e.pointerId);
+    applyImgTransform(media);
+  });
+  stage.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const media = stage.querySelector('img');
+    if(!media) return;
+    panX = ox + (e.clientX - sx);
+    panY = oy + (e.clientY - sy);
+    const max = 200 * libViewZoom;
+    panX = Math.max(-max, Math.min(max, panX));
+    panY = Math.max(-max, Math.min(max, panY));
+    applyImgTransform(media);
+  });
+  stage.addEventListener('pointerup', e=>{ dragging = false; applyImgTransform(stage.querySelector('img')); });
+  stage.addEventListener('pointercancel', ()=>{ dragging = false; });
 })();
 
 
